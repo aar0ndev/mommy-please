@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Mommy-Please Options</title>
+    <link rel="stylesheet" href="../app.css" type="text/css"/>
+    <style>
+        body {
+            margin: 25px;
+        }
+        #updatePinSection {
+            display: none;
+        }
+
+        .hasPin #updatePinSection {
+            display: block;
+        }
+
+        .hasPin #setPinSection {
+            display: none;
+        }
+
+        #message.error {
+            color: #A00;
+        }
+
+        input.error {
+            border: 1px solid #A00
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="title">Welcome to Mommy-Please</h1>
+    <p id="message">Please set the pin to something only you will know.</p>
+
+    <div id="setPinSection">
+        <form>
+        <div>
+            <label for="setPin1">Enter 4-digit pin:</label><br><input type="password" id="setPin1">
+        </div>
+        <div>
+            <label for="setPin2">Re-enter 4-digit pin:</label><br><input type="password" id="setPin2">
+        </div>
+        <div>
+            <button id="btnSetPin" type="submit">Set Pin</button>
+        </div>
+        </form>
+    </div>
+
+    <div id="updatePinSection">
+        <div>
+            <label for="updatePin0">Enter current pin:</label><br><input type="password" id="updatePin0">
+        </div>
+        <div>
+            <label for="updatePin1">Enter new pin:</label><br><input type="password" id="updatePin1">
+        </div>
+        <div>
+            <label for="updatePin2">Re-enter new pin:</label><br><input type="password" id="updatePin2">
+        </div>
+        <div>
+            <button id="btnUpdatePin">Update Pin</button>
+        </div>
+    </div>
+    <script src="options.js"></script>
+</body>
+
+</html>

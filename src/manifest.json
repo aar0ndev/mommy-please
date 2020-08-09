@@ -15,17 +15,12 @@
     "browser_action": {
         "default_popup": "popup/popup.html"
     },
-    "declarative_net_request" : {
-        "rule_resources" : [{
-          "id": "ruleset_1",
-          "enabled": true,
-          "path": "rules.json"
-        }]
-    },
+    "options_page": "options/options.html",
     "permissions": [
-        "declarativeNetRequest",
+        "storage",
+        "tabs",
         "webRequest",
-        "declarativeNetRequestFeedback",
+        "webRequestBlocking",
         "<all_urls>"
       ]
 }
