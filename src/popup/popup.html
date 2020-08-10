@@ -1,24 +1,46 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8" />
-        <title>Mommy Please extension</title>
-        <style>
-            html {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                min-width: 120px;
-            }
-            h1 {
-                font-size: 14px;
-                font-weight: 300;
-            }
-            h2 {
-                font-size: 9px;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Mommy Please</h1>
-        <h2>An extension to monitor and control websites visited by children.</h2>
-    </body>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mommy Please extension</title>
+    <link rel="stylesheet" href="../app.css" type="text/css" />
+    <style>
+        html {
+            min-width: 150px;
+        }
+
+        h1 {
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        h2 {
+            font-size: 9px;
+        }
+
+        button {
+            min-width: 48px;
+            min-height: 48px;
+            background: #22A;
+            color: white;
+        }
+
+        .remove-unblock-section {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Mommy Please</h1>
+    <h2>An extension to monitor and control websites visited by children.</h2>
+    <div class='remove-unblock-section'>
+        <p>This site is unblocked for <span class="timeLeft">X</span><span class="timeLeftUnits">more hours</span>.</p>
+        <button class='block'>Block Now</button>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
 </html>

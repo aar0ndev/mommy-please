@@ -22,59 +22,51 @@ function showError(msg, inputs) {
     }
 }
 
-function validatePins(inputs) {
+function validateNewPin(inputs) {
     var pin1 = inputs[0].value
     var pin2 = inputs[1].value
     if (pin1.length != 4 || pin2.length != 4) {
-        showError('Pins must be 4 digits', inputs)
+        showError('New pins must be 4 digits', inputs)
     } else if (pin1 != pin2) {
-        showError('Pins do not match', inputs)
+        showError('New pins do not match', inputs)
     } else {
         return true;
     }
     return false;
 }
 
-function tryUpdatePin(input1, input2, sectionEl) {
-    if (validatePins([input1, input2])) {
-        updatePin(input1.value)
-        sectionEl.style.display = 'None'
-        messageEl.innerText = 'Success!'
-        messageEl.style.color = 'black'
+function tryUpdatePin({oldInput, newInputs, section}) {
+    if (validateNewPin(newInputs)) {
+        var oldPin = oldInput && oldInput.value
+        var newPin = newInputs[0].value
+        chrome.runtime.sendMessage({type: 'update-pin', oldPin, newPin }, function(response) {
+            if (response.result) {
+                section.style.display = 'None'
+                messageEl.innerText = 'Success!'
+                messageEl.style.color = 'black'
+            } else if (response.error){
+                showError(response.error, [oldInput])
+            }
+        })
     }
 }
 
 btnSetPin.addEventListener('click', (evt) => {
     evt.preventDefault()
-    tryUpdatePin(setPin1, setPin2, setPinSection)
+    tryUpdatePin({newInputs: [setPin1, setPin2], section: setPinSection})
 })
 
 btnUpdatePin.addEventListener('click', (evt) => {
     evt.preventDefault()
-    getPin(function (oldPin) {
-        if (oldPin !== updatePin0.value) {
-            showError("Current pin not correct", [updatePin0])
-        } else {
-            tryUpdatePin(updatePin1, updatePin2, updatePinSection)
-        }
-    })
+    tryUpdatePin({oldInput: updatePin0, newInputs: [updatePin1, updatePin2], section: updatePinSection})
 })
 
-// functions that probably belong in background...
-function updatePin(pin) {
-    //chrome.runtime.storage.set('pin', pin)...
-}
-
-function getPin(callback) {
-    callback('')
-    // return chrome.storage.local.get(['pin'], function (result) {
-    //     callback(!!result.pin)
-    // })
-}
-
-// update class to show update form if needed
-getPin(function (pin) {
-    if (!!pin) {
+// fixme: probably should just check for existence of pin, perhaps from background...
+chrome.runtime.sendMessage({type: 'check-status'}, function(response) {
+    
+    document.querySelector('body').style.opacity = 1
+    if (!response.result) return;
+    if (response.pinSet) {
         titleEl.innerText = "Update Pin"
         document.body.className = 'hasPin'
     }

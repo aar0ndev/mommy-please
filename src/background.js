@@ -3,101 +3,158 @@ const baseUrl = chrome.runtime.getURL('/');
 const MAX_DATE = 8640000000000000
 const whitelist = {};
 
+var pin = null;
+
 function isValidCode(code) {
-    return code === '1234'
+    return pin !== null && pin === code
 }
 
-function unblock({url, code, timestamp}) {
-    if (checkWhitelist({url})) return true;
+function updatePin({oldPin, newPin}) {
+    if (pin !== null && !isValidCode(oldPin)) {
+        return "Incorrect pin."
+    }
+    pin = newPin
+    chrome.storage.local.set({pin})
+}
+
+// return error message if fails
+function unblock({ url, code, timestamp }) {
+    if (checkWhitelist( url )) return true;
     if (isValidCode(code)) {
-        console.log('unblocking...')
-        return whitelistUrl({url, timestamp})
+        whitelistUrl({ url, timestamp })
+    } else {
+        if (pin == null) {
+            return "Pin not set, please set in extension options before using."
+        }
+        return "Incorrect pin."
     }
 }
 
-function whitelistUrl({url, timestamp}) {
-    var match = url.match(domainRegex)
-    if (match && match.length) {
-        console.log('whitelisting ' + match[1] + '...')
-        whitelist[match[1]] = timestamp;
-        chrome.storage.local.set({whitelist})
+function whitelistUrl({ url, timestamp }) {
+    var domain = getDomain(url)
+    console.log('whitelisting ' + domain + '...')
+    if (domain) {
+        whitelist[domain] = timestamp;
+        chrome.storage.local.set({ whitelist })
         return true
-    }   
+    }
     return false
 }
 
-function checkWhitelist({url}) {
-    var domainMatch = url.match(domainRegex);
-    var domain = null;
-    if (domainMatch && domainMatch.length) {
-        domain = domainMatch[1];
+function unWhitelistUrl(url) {
+    var domain = getDomain(url)
+    console.log('removing ' + domain + ' from whitelist...')
+    if (domain) {
+        delete whitelist[domain]
+        chrome.storage.local.set({ whitelist })
+        return true
     }
+    return false
+}
 
-    if (domain != null && whitelist[domain] > Date.now()) {
+function getDomain(url) {
+    if (url == null || url.match == null) return null
+    var domainMatch = url.match(domainRegex)
+    var domain = null
+    if (domainMatch && domainMatch.length) {
+        domain = domainMatch[1]
+    }
+    return domain
+}
+
+function checkWhitelist(url) {
+    var timeLeft = getTimeLeft(url)
+    if (timeLeft < 0 || timeLeft > 0) {
         return true;
     }
     return false;
 }
 
-function navigate({url, replace}) {
-    if (replace === 'shenanigans') {
-        chrome.tabs.executeScript({code: `window.location.replace('${url}')`})
-    } else {
-        chrome.tabs.update({url})
+function getTimeLeft(url) {
+    var timestamp = getTimestamp(url)
+    if (timestamp == null) return null;
+    return timestamp < 0 ? -1 : Math.max(0, timestamp - Date.now());
+}
+
+function getTimestamp(url) {
+    var domain = getDomain(url)
+    if (domain == null || whitelist[domain] == null) return null;
+    return whitelist[domain]
+}
+
+// function navigate({url, replace}) {
+//     if (replace === 'shenanigans') {
+//         chrome.tabs.executeScript({code: `window.location.replace('${url}')`})
+//     } else {
+//         chrome.tabs.update({url})
+//     }
+// }
+
+function onMessageCallback(msg, sender, sendResponse) {
+    if (msg && msg.type) {
+        if (msg.type === 'block') {
+            return sendResponse({ result: unWhitelistUrl(msg.url) })
+        }
+        if (msg.type === 'unblock') {
+            var timestamp = Date.now() + 1000;
+            if (msg.hours !== undefined) {
+                if (msg.hours < 0) {
+                    timestamp = -1
+                } else {
+                    timestamp += Math.round(msg.hours * 3600 * 1000)
+                }
+            }
+            var error = unblock({ url: msg.url, code: msg.code, timestamp })
+            sendResponse({ result: !error, url: msg.url, error })
+        }
+        if (msg.type === 'check-url') {
+            return sendResponse({ result: true, url: msg.url, blocked: !checkWhitelist(msg.url), timestamp: getTimestamp(msg.url) })
+        }
+        if (msg.type === 'update-pin') {
+            var error = updatePin({oldPin: msg.oldPin, newPin: msg.newPin})
+            return sendResponse({result: !error, error})
+        }
+        if (msg.type === 'check-status') {
+            return sendResponse({result: true, pinSet: pin!=null })
+        }
+    }
+    sendResponse({ result: false })
+}
+
+// filter requests based on whitelist
+function onBeforeRequestCallback(details) {
+    if (details.url.startsWith(baseUrl)) {
+        return;
+    }
+
+    if (details.type != 'main_frame') {
+        return;
+    }
+
+    if (!checkWhitelist(details.url)) {
+        chrome.tabs.update({ url: chrome.runtime.getURL('/block/block.html#' + details.url) })
     }
 }
 
-chrome.runtime.onInstalled.addListener(function() {
+chrome.runtime.onInstalled.addListener(function () {
 
-
-    chrome.storage.local.get(['whitelist'], function(result) {
-        console.log('whitelist is ' + result.whitelist)
+    // populate whitelist from storage
+    chrome.storage.local.get(['whitelist'], function (result) {
         if (!result.whitelist) return;
-        for(k of Object.keys(result.whitelist)) {
+        for (k of Object.keys(result.whitelist)) {
             whitelist[k] = result.whitelist[k]
         }
     })
 
-    function onMessageCallback(msg, sender, sendResponse) {
-        if (msg && msg.type) {
-            if (msg.type === 'whitelist') {
-                return sendResponse({result: whitelistUrl({url: msg.url, timestamp: Date.now() + 15*1000})})
-            }
-            if (msg.type === 'unblock') {
-                var timestamp = Date.now() + 1000;
-                if (msg.hours !== undefined) {
-                    timestamp += Math.round(msg.hours * 3600 * 1000)
-                }
-                if (unblock({url: msg.url, code: msg.code, timestamp})) {
-                    return sendResponse({result: true})
-                }
-            }
-        }
-        sendResponse({result: false})
-    }
+    chrome.storage.local.get(['pin'], function (result) {
+        if (result.pin == null) return;
+        pin = result.pin;
+    })
 
-    function onBeforeRequestCallback(details) {
-        if (details.url.startsWith(baseUrl)) {
-            return;
-        }
-
-        if (details.type != 'main_frame') {
-            return; 
-        }
-
-        // fix for google common search?
-        // if (details.initiator && !details.initiator.startsWith(baseUrl)) {
-        //     return {cancel: true}
-        // }
-
-        if (!checkWhitelist({url: details.url})) {
-            chrome.tabs.update({url: chrome.runtime.getURL('/block/index.html#' + details.url)})
-        }
-    }
-    filter = {urls: ["<all_urls>"]};
+    filter = { urls: ["<all_urls>"] };
     opt_extraInfoSpec = ["blocking"];
 
     chrome.runtime.onMessage.addListener(onMessageCallback);
-    chrome.webRequest.onBeforeRequest.addListener( onBeforeRequestCallback, filter, opt_extraInfoSpec );
-  });
+    chrome.webRequest.onBeforeRequest.addListener(onBeforeRequestCallback, filter, opt_extraInfoSpec);
+});
 
