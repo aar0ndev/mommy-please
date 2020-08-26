@@ -1,0 +1,15 @@
+html {
+  min-width: 200px;
+}
+
+h1 {
+  font-size: 15px;
+}
+
+h2 {
+  font-size: 9px;
+}
+
+.remove-unblock-section {
+  display: none;
+}

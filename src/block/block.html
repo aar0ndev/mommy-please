@@ -1,29 +1,39 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8" />
-        <title>Page Blocked - Mommy Please</title>
-        <style>
-            html {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }
-            button {
-                min-width: 48px;
-                min-height: 48px;
-                background: #22A;
-                color: white;
-            }
-            .confirm {
-                display: none;
-            }
+<html lang="en">
 
-        </style>
-    </head>
-    <body>
-        <h1>Mommy Please</h1>
-        <h2>This page has been blocked.</h2>
-        <button>Ask Mommy</button>
-        <div class="confirm"><input type="password"></div>
-        <script src="block.js"></script>
-    </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Page Blocked - Mommy Please</title>
+  <link rel="stylesheet" href="../app.css" type="text/css" />
+  <link rel="stylesheet" href="./block.css" type="text/css" />
+</head>
+
+<body class="state-request">
+  <h1 class="appname">Mommy Please</h1>
+  <h2 class="hide request confirm">This page has been blocked.</h2>
+  <div class="hide request">
+    <p>Click the button below to request an unblock.</p>
+    <button class="ask-mommy">Ask Mommy</button>
+  </div>
+  <form>
+    <div class="hide confirm">
+
+      <p>Enter pin to unlock for
+        <select class="duration">
+          <option value="1">1 hour</option>
+          <option value="24" selected>1 day</option>
+          <option value="-1">Forever</option>
+        </select>
+        or unblock from an authorized device.</p>
+      <input id="pinInput" class="password" type="password" />
+      </label>
+      <button class="unblock" type="submit">Unblock</button>
+
+    </div>
+  </form>
+  <p class="error"></p>
+  <script src="block.js"></script>
+</body>
+
 </html>

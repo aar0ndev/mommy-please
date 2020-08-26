@@ -1,37 +1,52 @@
-input = document.querySelector('input.password');
-duration = document.querySelector('select.duration')
-errorContainer = document.querySelector('p.error')
+/* global chrome */
 
-function showError(msg) {
-    errorContainer.innerText = msg
+var input = document.querySelector('input.password')
+var duration = document.querySelector('select.duration')
+var errorContainer = document.querySelector('p.error')
+
+function uiSetState (val) {
+  document.body.className = 'state-' + val
 }
 
-function clearError() {
-    errorContainer.innerText = ''
+function uiShowError (msg) {
+  errorContainer.innerText = msg
 }
 
-function unblockResponseCallback(response) {
-    if (response.result === true) {
-        window.location.replace(response.url)
-    } else if (response.error) {
-        showError(response.error)
-    }
+function uiClearError () {
+  uiShowError('')
 }
 
-function askMommyHandler(e) {
-    document.querySelector('.confirm').style.display = 'block'
-    // todo: send unblock request to server
-    input.focus()
+function unblockResponseCallback (response) {
+  if (response.result === true) {
+    uiSetState('done')
+    window.location.replace(response.url)
+  } else if (response.error) {
+    uiSetState('confirm')
+    uiShowError(response.error)
+  }
 }
 
-function unblockHandler(e) {
-    e.preventDefault()
-    clearError()
-    url = window.location.hash.substr(1)
-    hours = duration.value
-    code = input.value
-    chrome.runtime.sendMessage({type: 'unblock', code, url, hours}, unblockResponseCallback)
+function askMommyHandler (e) {
+  uiSetState('confirm')
+  input.focus()
 }
 
-document.querySelector('button.ask-mommy').addEventListener('click', askMommyHandler);
-document.querySelector('button.unblock').addEventListener('click', unblockHandler);
+function unblockHandler (e) {
+  e.preventDefault()
+  uiClearError()
+  var url = window.location.hash.substr(1)
+  var hours = duration.value
+  var code = input.value
+  chrome.runtime.sendMessage(
+    { type: 'unblock', code, url, hours },
+    unblockResponseCallback
+  )
+  uiSetState('waiting')
+}
+
+document
+  .querySelector('button.ask-mommy')
+  .addEventListener('click', askMommyHandler)
+document
+  .querySelector('button.unblock')
+  .addEventListener('click', unblockHandler)

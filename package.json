@@ -1,0 +1,28 @@
+{
+  "name": "mommy-please",
+  "version": "0.1.1",
+  "description": "A Chrome Extension to help parents manage a childs web access.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aar0ndev/mommy-please.git"
+  },
+  "author": "Aaron Haley",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aar0ndev/mommy-please/issues"
+  },
+  "homepage": "https://github.com/aar0ndev/mommy-please#readme",
+  "devDependencies": {
+    "eslint": "^7.7.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "prettier-eslint": "^11.0.0"
+  }
+}

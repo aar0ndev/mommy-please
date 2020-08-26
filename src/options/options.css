@@ -1,0 +1,44 @@
+body {
+  margin: 25px;
+  opacity: 0;
+  transition: opacity 300ms;
+}
+
+body.ready {
+  opacity: 1;
+}
+
+.section.hasPin,
+.section.noPin,
+.title.hasPin,
+.title.noPin {
+  display: none;
+}
+
+body.hasPin .hasPin {
+  display: block;
+}
+
+body.noPin .noPin {
+  display: block;
+}
+
+#paneUpdatePin {
+  display: none;
+}
+
+#updatePinSection.active #paneUpdatePin {
+  display: block;
+}
+
+#updatePinSection.active #btnUpdatePinStart {
+  display: none;
+}
+
+#message.error {
+  color: #a00;
+}
+
+input.error {
+  border: 1px solid #a00;
+}
