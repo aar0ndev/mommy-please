@@ -1,5 +1,5 @@
 /* global chrome */
-
+import { log } from './log.js'
 const domainRegex = /^(?:https?:?\/\/)([^/?]*)/i
 const baseUrl = chrome.runtime.getURL('/')
 const whitelist = {}
@@ -33,7 +33,7 @@ function unblock ({ url, code, timestamp }) {
 
 function whitelistUrl ({ url, timestamp }) {
   var domain = getDomain(url)
-  console.log('whitelisting ' + domain + '...')
+  log.log('whitelisting ' + domain + '...')
   if (domain) {
     whitelist[domain] = timestamp
     chrome.storage.local.set({ whitelist })
@@ -44,7 +44,7 @@ function whitelistUrl ({ url, timestamp }) {
 
 function unWhitelistUrl (url) {
   var domain = getDomain(url)
-  console.log('removing ' + domain + ' from whitelist...')
+  log.log('removing ' + domain + ' from whitelist...')
   if (domain) {
     delete whitelist[domain]
     chrome.storage.local.set({ whitelist })
@@ -83,8 +83,19 @@ function getTimestamp (url) {
   return whitelist[domain]
 }
 
-function onMessageCallback (msg, sender, sendResponse) {
+function onInstalled (info) {
+  if (info && info.reason === 'update') {
+    log.clear()
+  }
+  log.debug({ method: 'onInstalled', info })
+  if (info && info.reason === 'install') {
+    chrome.runtime.openOptionsPage()
+  }
+}
+
+function onMessage (msg, sender, sendResponse) {
   var error
+  log.debug({ method: 'onMessage', msg })
   if (msg && msg.type) {
     if (msg.type === 'block') {
       return sendResponse({ result: unWhitelistUrl(msg.url) })
@@ -120,24 +131,48 @@ function onMessageCallback (msg, sender, sendResponse) {
   sendResponse({ result: false })
 }
 
-// filter requests based on whitelist
-function onBeforeRequestCallback (details) {
+function onBeforeRequest (details) {
+  log.debug({ method: 'onBeforeRequest', details })
   if (details.url.startsWith(baseUrl)) {
     return
   }
 
+  // ignore anything that is not a web page
   if (details.type !== 'main_frame') {
+    log.debug({
+      method: 'onBeforeRequest',
+      comment: 'not a main_frame, ignoring'
+    })
     return
   }
 
+  // filter requests based on whitelist
   if (!checkWhitelist(details.url)) {
+    log.debug({
+      method: 'onBeforeRequest',
+      comment: 'not in whitelist, blocking!'
+    })
     chrome.tabs.update(details.tabId, {
       url: chrome.runtime.getURL('/block/block.html#' + details.url)
     })
   }
 }
 
-chrome.runtime.onInstalled.addListener(function () {
+function addListeners () {
+  var filter = { urls: ['<all_urls>'] }
+  var optExtraInfoSpec = ['blocking']
+
+  chrome.webRequest.onBeforeRequest.addListener(
+    onBeforeRequest,
+    filter,
+    optExtraInfoSpec
+  )
+  chrome.runtime.onMessage.addListener(onMessage)
+  chrome.runtime.onInstalled.addListener(onInstalled)
+}
+
+;(function init () {
+  addListeners()
   // populate whitelist from storage
   chrome.storage.local.get(['whitelist'], function (result) {
     if (!result.whitelist) return
@@ -150,14 +185,4 @@ chrome.runtime.onInstalled.addListener(function () {
     if (result.pin == null) return
     pin = result.pin
   })
-
-  var filter = { urls: ['<all_urls>'] }
-  var optExtraInfoSpec = ['blocking']
-
-  chrome.runtime.onMessage.addListener(onMessageCallback)
-  chrome.webRequest.onBeforeRequest.addListener(
-    onBeforeRequestCallback,
-    filter,
-    optExtraInfoSpec
-  )
-})
+})()
