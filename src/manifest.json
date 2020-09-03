@@ -21,6 +21,7 @@
     "tabs",
     "webRequest",
     "webRequestBlocking",
-    "<all_urls>"
+    "http://*/*",
+    "https://*/*"
   ]
 }
