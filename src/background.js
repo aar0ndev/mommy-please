@@ -1,10 +1,12 @@
 /* global chrome */
-import { log } from './log.js'
+import { Log, LogLevel } from './log.js'
 const domainRegex = /^(?:https?:?\/\/)([^/?]*)/i
 const baseUrl = chrome.runtime.getURL('/')
 const whitelist = {}
 
 var pin = null
+
+const log = new Log('background', LogLevel.DEBUG)
 
 function isValidCode (code) {
   return pin !== null && pin === code
@@ -33,8 +35,8 @@ function unblock ({ url, code, timestamp }) {
 
 function whitelistUrl ({ url, timestamp }) {
   var domain = getDomain(url)
-  log.log('whitelisting ' + domain + '...')
   if (domain) {
+    log.info({ comment: 'whitelisting', domain, details: { url, timestamp } })
     whitelist[domain] = timestamp
     chrome.storage.local.set({ whitelist })
     return true
@@ -44,8 +46,8 @@ function whitelistUrl ({ url, timestamp }) {
 
 function unWhitelistUrl (url) {
   var domain = getDomain(url)
-  log.log('removing ' + domain + ' from whitelist...')
   if (domain) {
+    log.info({ comment: 'un-whitelisting', domain, details: { url } })
     delete whitelist[domain]
     chrome.storage.local.set({ whitelist })
     return true
@@ -94,11 +96,11 @@ function onInstalled (info) {
 }
 
 function onMessage (msg, sender, sendResponse) {
-  var error
-  log.debug({ method: 'onMessage', msg })
+  let error
+  let res = { result: false }
   if (msg && msg.type) {
     if (msg.type === 'block') {
-      return sendResponse({ result: unWhitelistUrl(msg.url) })
+      res = { result: unWhitelistUrl(msg.url) }
     }
     if (msg.type === 'unblock') {
       var timestamp = Date.now() + 1000
@@ -110,29 +112,29 @@ function onMessage (msg, sender, sendResponse) {
         }
       }
       error = unblock({ url: msg.url, code: msg.code, timestamp })
-      sendResponse({ result: !error, url: msg.url, error })
+      res = { result: !error, url: msg.url, error }
     }
     if (msg.type === 'check-url') {
-      return sendResponse({
+      res = {
         result: true,
         url: msg.url,
         blocked: !checkWhitelist(msg.url),
         timestamp: getTimestamp(msg.url)
-      })
+      }
     }
     if (msg.type === 'update-pin') {
       error = updatePin({ oldPin: msg.oldPin, newPin: msg.newPin })
-      return sendResponse({ result: !error, error })
+      res = { result: !error, error }
     }
     if (msg.type === 'check-status') {
-      return sendResponse({ result: true, pinSet: pin != null })
+      res = { result: true, pinSet: pin != null }
     }
   }
-  sendResponse({ result: false })
+  log.debug({ method: 'onMessage', msg, res })
+  sendResponse(res)
 }
 
 function onBeforeRequest (details) {
-  log.debug({ method: 'onBeforeRequest', details })
   if (details.url.startsWith(baseUrl)) {
     return
   }
@@ -141,21 +143,29 @@ function onBeforeRequest (details) {
   if (details.type !== 'main_frame') {
     log.debug({
       method: 'onBeforeRequest',
-      comment: 'not a main_frame, ignoring'
+      comment: 'not a main_frame, ignoring',
+      details
     })
     return
   }
 
   // filter requests based on whitelist
   if (!checkWhitelist(details.url)) {
-    log.debug({
+    log.info({
       method: 'onBeforeRequest',
+      url: details.url,
       comment: 'not in whitelist, blocking!'
     })
     chrome.tabs.update(details.tabId, {
       url: chrome.runtime.getURL('/block/block.html#' + details.url)
     })
+    return
   }
+  log.debug({
+    method: 'onBeforeRequest',
+    comment: 'ok',
+    details
+  })
 }
 
 function addListeners () {
@@ -172,9 +182,12 @@ function addListeners () {
 }
 
 ;(function init () {
+  log.debug({ method: 'init' })
   addListeners()
   // populate whitelist from storage
+
   chrome.storage.local.get(['whitelist'], function (result) {
+    log.debug({ method: 'init', data: { ctx: 'after get whitelist', result } })
     if (!result.whitelist) return
     for (var k of Object.keys(result.whitelist)) {
       whitelist[k] = result.whitelist[k]
@@ -182,6 +195,7 @@ function addListeners () {
   })
 
   chrome.storage.local.get(['pin'], function (result) {
+    log.debug({ method: 'init', data: { ctx: 'after get pin', result } })
     if (result.pin == null) return
     pin = result.pin
   })
