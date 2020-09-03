@@ -132,6 +132,7 @@ function onMessage (msg, sender, sendResponse) {
   }
   log.debug({ method: 'onMessage', msg, res })
   sendResponse(res)
+  log.prune()
 }
 
 function onBeforeRequest (details) {
@@ -159,6 +160,7 @@ function onBeforeRequest (details) {
     chrome.tabs.update(details.tabId, {
       url: chrome.runtime.getURL('/block/block.html#' + details.url)
     })
+    log.prune()
     return
   }
   log.debug({
@@ -199,4 +201,6 @@ function addListeners () {
     if (result.pin == null) return
     pin = result.pin
   })
+
+  log.prune()
 })()
