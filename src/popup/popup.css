@@ -1,5 +1,5 @@
 html {
-  min-width: 200px;
+  min-width: 250px;
 }
 
 h1 {
@@ -12,4 +12,12 @@ h2 {
 
 .remove-unblock-section {
   display: none;
+}
+
+.logo {
+  height: 1.5em;
+  padding-left: 0.5em;
+  position: absolute;
+  filter: grayscale(0.3);
+  opacity: 0.9;
 }

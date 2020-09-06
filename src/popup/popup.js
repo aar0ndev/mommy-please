@@ -33,11 +33,11 @@ function updateTimeLeft () {
 
 function showTimeLeft (value, unit) {
   if (value < 0) {
-    timeLeftSpan.innerText = 'Forever'
+    timeLeftSpan.innerText = 'forever'
     timeLeftUnitsSpan.innerText = ''
     return
   }
-  timeLeftSpan.innerText = value
+  timeLeftSpan.innerText = 'for ' + value
   timeLeftUnitsSpan.innerText = ' more ' + (value > 1 ? unit + 's' : unit)
 }
 
