@@ -1,6 +1,6 @@
 /* global chrome */
 import { Log, LogLevel } from './log.js'
-const domainRegex = /^(?:https?:?\/\/)([^/?]*)/i
+import { getDomain } from './util.js'
 const baseUrl = chrome.runtime.getURL('/')
 const whitelist = {}
 
@@ -22,7 +22,7 @@ function updatePin ({ oldPin, newPin }) {
 
 // return error message if fails
 function unblock ({ url, code, timestamp }) {
-  if (checkWhitelist(url)) return true
+  if (checkWhitelist(url)) return
   if (isValidCode(code)) {
     whitelistUrl({ url, timestamp })
   } else {
@@ -53,16 +53,6 @@ function unWhitelistUrl (url) {
     return true
   }
   return false
-}
-
-function getDomain (url) {
-  if (url == null || url.match == null) return null
-  var domainMatch = url.match(domainRegex)
-  var domain = null
-  if (domainMatch && domainMatch.length) {
-    domain = domainMatch[1]
-  }
-  return domain
 }
 
 function checkWhitelist (url) {
