@@ -1,3 +1,31 @@
+body {
+  background: #eee;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.pad-top {
+  flex-grow: 0.25;
+}
+
+.pad-bottom {
+  flex-grow: 0.75;
+}
+
+.container {
+  background: white;
+  flex-grow: 0;
+  width: 325px;
+  border-radius: 20px;
+  box-shadow: 1px 6px 15px -10px rgb(0 0 0 / 50%),
+    2px 2px 20px -5px inset rgb(0 0 0 / 10%);
+  padding: 30px 50px;
+}
+
 .hide {
   display: none;
 }
@@ -15,5 +43,13 @@ body.state-confirm .confirm {
 }
 
 .error {
-  color: red;
+  color: #c00;
+  font-weight: bold;
+}
+
+.logo {
+  padding-left: 0.5rem;
+  position: absolute;
+  filter: grayscale(0.3);
+  opacity: 0.9;
 }

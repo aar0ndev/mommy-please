@@ -10,7 +10,10 @@
 </head>
 
 <body class="state-request">
-  <h1 class="appname">Mommy Please</h1>
+<div class="pad-top"></div>
+<div class="container">
+  <h1 class="appname">Mommy-Please<img class="logo" src="../icons/48.png"></h1>
+  <h3 class="domain">&nbsp;</h3>
   <h2 class="hide request confirm">This page has been blocked.</h2>
   <div class="hide request">
     <p>Click the button below to request an unblock.</p>
@@ -19,7 +22,7 @@
   <form>
     <div class="hide confirm">
 
-      <p>Enter pin to unlock for
+      <p>Enter pin to unblock for
         <select class="duration">
           <option value="1">1 hour</option>
           <option value="24" selected>1 day</option>
@@ -33,7 +36,10 @@
     </div>
   </form>
   <p class="error"></p>
-  <script src="block.js"></script>
+
+</div>
+<div class="pad-bottom"></div>
+<script type="module" src="block.js"></script>
 </body>
 
 </html>
