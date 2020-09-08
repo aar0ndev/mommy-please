@@ -61,9 +61,9 @@ function unblockHandler (e) {
   uiSetState('waiting')
 }
 
-document
-  .querySelector('button.ask-mommy')
-  .addEventListener('click', askMommyHandler)
+const btnAsk = document.querySelector('button.ask-mommy')
+btnAsk.addEventListener('click', askMommyHandler)
+btnAsk.focus()
 document
   .querySelector('button.unblock')
   .addEventListener('click', unblockHandler)
