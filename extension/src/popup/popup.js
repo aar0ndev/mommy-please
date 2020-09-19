@@ -1,24 +1,23 @@
 /* global chrome */
 
-var removeUnblockSection = document.querySelector('.remove-unblock-section')
-var timeLeftSpan = document.querySelector('span.timeLeft')
-var timeLeftUnitsSpan = document.querySelector('span.timeLeftUnits')
-var blockButton = document.querySelector('button.block')
+var elRemoveUnblock = document.querySelector('.remove-unblock-section')
+var elSpanTimeLeft = document.querySelector('span.timeLeft')
+var elSpanTimeLeftUnits = document.querySelector('span.timeLeftUnits')
+var elButtonBlock = document.querySelector('button.block')
 
-var timestamp = null
-function updateTimeLeft () {
-  removeUnblockSection.style.display = timestamp == null ? 'none' : 'block'
-  if (timestamp == null) return
-  if (timestamp < 0) {
+function updateTimeLeft (timeLeft) {
+  elRemoveUnblock.style.display = timeLeft == null ? 'none' : 'block'
+  if (timeLeft == null) return
+  if (timeLeft < 0) {
     showTimeLeft(-1)
     return
   }
-  var secondsLeft = Math.round(Math.max(0, timestamp - Date.now()) / 1000.0)
+  var secondsLeft = Math.round(Math.max(0, timeLeft) / 1000.0)
   var minutesLeft = Math.round(secondsLeft / 60)
   var hoursLeft = Math.round(minutesLeft / 60)
 
   if (secondsLeft === 0) {
-    timestamp = null
+    timeLeft = null
     return
   }
 
@@ -33,12 +32,12 @@ function updateTimeLeft () {
 
 function showTimeLeft (value, unit) {
   if (value < 0) {
-    timeLeftSpan.innerText = 'forever'
-    timeLeftUnitsSpan.innerText = ''
+    elSpanTimeLeft.innerText = 'forever'
+    elSpanTimeLeftUnits.innerText = ''
     return
   }
-  timeLeftSpan.innerText = 'for ' + value
-  timeLeftUnitsSpan.innerText = ' more ' + (value > 1 ? unit + 's' : unit)
+  elSpanTimeLeft.innerText = 'for ' + value
+  elSpanTimeLeftUnits.innerText = ' more ' + (value > 1 ? unit + 's' : unit)
 }
 
 chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -47,18 +46,18 @@ chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     console.log(response)
     if (!(response && response.result)) return
     if (!response.blocked) {
-      timestamp = response.timestamp
-      setInterval(updateTimeLeft, 1000)
+      updateTimeLeft(response.timeLeft)
     }
   })
 })
 
-blockButton.addEventListener('click', function (e) {
+elButtonBlock.addEventListener('click', function (e) {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    var url = tabs[0].url
-    chrome.runtime.sendMessage({ type: 'block', url }, function (response) {
-      if (response.result) {
-        chrome.tabs.reload(tabs[0].id)
+    const { id, url } = tabs[0]
+    chrome.runtime.sendMessage({ type: 'block', url, tabId: id }, function (
+      response
+    ) {
+      if (response && response.result) {
         window.close()
       } else {
         console.log('error blocking', response)

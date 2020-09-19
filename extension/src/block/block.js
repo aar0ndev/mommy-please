@@ -1,25 +1,28 @@
 /* global chrome */
-import { getDomain } from '../util.js'
-import { Log, LogLevel } from '../log.js'
+import { getDomain } from '../common/util.js'
+import { Log, LogLevel } from '../common/log.js'
 
 const log = new Log('block', LogLevel.DEBUG)
-
-var input = document.querySelector('input.password')
-var duration = document.querySelector('select.duration')
-var errorContainer = document.querySelector('p.error')
+const elInputPassword = document.querySelector('input.password')
+const elSelectDuration = document.querySelector('select.duration')
+const elError = document.querySelector('p.error')
+const elButtonAsk = document.querySelector('button.ask-mommy')
+const elButtonUnblock = document.querySelector('button.unblock')
+const elDomain = document.querySelector('.domain')
 
 function uiSetState (val) {
   document.body.className = 'state-' + val
 }
 
-function uiShowError (msg) {
-  if (msg.includes('options')) {
-    msg = msg.replace(
+function uiShowError (error) {
+  let errMsg = error
+  if (error && error.includes('options')) {
+    errMsg = error.replace(
       'options',
       '<a href="/options/options.html" target="options">options</a>'
     )
   }
-  errorContainer.innerHTML = msg
+  elError.innerHTML = errMsg
 }
 
 function uiClearError () {
@@ -28,14 +31,14 @@ function uiClearError () {
 
 function unblockResponseCallback (response) {
   log.debug({ method: 'unblockResponseCallback', response })
-  if (response.result === true) {
+  if (response && response.result === true) {
     uiSetState('done')
-    window.location.replace(response.url)
-    setTimeout(() => {
-      log.debug({ comment: 'forcing url change', response })
-      window.location.href = response.url
-    }, 2000)
-  } else if (response.error) {
+    // window.location.replace(response.url)
+    // setTimeout(() => {
+    //   log.debug({ comment: 'forcing url change', response })
+    //   window.location.href = response.url
+    // }, 2000)
+  } else if (response && response.error) {
     uiSetState('confirm')
     uiShowError(response.error)
   }
@@ -44,7 +47,15 @@ function unblockResponseCallback (response) {
 function askMommyHandler (e) {
   log.debug({ method: 'askMommyHandler', e })
   uiSetState('confirm')
-  input.focus()
+  const url = window.location.hash.substr(1)
+  chrome.runtime.sendMessage(
+    {
+      type: 'unblock-auth-request',
+      url
+    }
+    // unblockResponseCallback
+  )
+  elInputPassword.focus()
 }
 
 function unblockHandler (e) {
@@ -52,24 +63,27 @@ function unblockHandler (e) {
   e.preventDefault()
   uiClearError()
   var url = window.location.hash.substr(1)
-  var hours = duration.value
-  var code = input.value
+  var hours = elSelectDuration.value
+  var testPin = elInputPassword.value
   chrome.runtime.sendMessage(
-    { type: 'unblock', code, url, hours },
+    { type: 'try-unblock', testPin, url, hours },
     unblockResponseCallback
   )
   uiSetState('waiting')
 }
 
-const btnAsk = document.querySelector('button.ask-mommy')
-btnAsk.addEventListener('click', askMommyHandler)
-btnAsk.focus()
-document
-  .querySelector('button.unblock')
-  .addEventListener('click', unblockHandler)
+;(function init () {
+  const url = window.location.hash.slice(1)
+  elButtonAsk.focus()
+  elButtonAsk.addEventListener('click', askMommyHandler)
+  elButtonUnblock.addEventListener('click', unblockHandler)
+  elDomain.innerText = getDomain(url)
 
-document.querySelector('.domain').innerText = getDomain(
-  window.location.hash.slice(1)
-)
-
-log.prune()
+  // sanity check, if url is not blocked, something went wrong and we should try to redirect
+  chrome.runtime.sendMessage({ type: 'check-url', url }, (response) => {
+    if (response && response.result && !response.blocked) {
+      chrome.runtime.sendMessage({ type: 'redirect-all', url })
+    }
+  })
+  log.prune()
+})()

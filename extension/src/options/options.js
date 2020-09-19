@@ -45,7 +45,7 @@ function tryUpdatePin ({ oldInput, newInputs, section }, callback) {
     var newPin = newInputs[0].value
     chrome.runtime.sendMessage(
       { type: 'update-pin', oldPin, newPin },
-      function (response) {
+      (response) => {
         if (response.result) {
           section.style.display = 'None'
           messageEl.innerText = 'Success!'

@@ -21,6 +21,11 @@ class Log {
     }
     console.debug(`[${level.name}]`, data)
     const logList = this._getAll()
+
+    // try to guess if an error was passed
+    if (data.stack && data.message) {
+      data = { error: data.message }
+    }
     logList.push({ date: new Date(), level: level.name, data })
     this._updateAll(logList)
   }
