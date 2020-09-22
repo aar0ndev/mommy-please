@@ -1,19 +1,31 @@
-/* global chrome */
 import { Log, LogLevel } from '../common/log.js'
 
-const log = new Log('pin.js', LogLevel.DEBUG)
+const log = new Log('pin.js', LogLevel.INFO)
 const PIN_STORAGE_KEY = '__pin'
 let _pin = null
 let _storage = null
 
+/**
+ * Check if pin has been set.
+ * @returns {boolean}
+ */
 export function isSet () {
   return _pin !== null
 }
 
-export function check (testPin) {
-  return _pin !== null && _pin === testPin
+/**
+ * Check if `pin` matches stored pin.
+ * @param {string} pin
+ */
+export function check (pin) {
+  return _pin !== null && _pin === pin
 }
 
+/**
+ * Update pin to `newPin`, but only if `oldPin` matches stored pin.
+ * @param {string} oldPin
+ * @param {string} newPin
+ */
 export function update ({ oldPin, newPin }) {
   if (_pin !== null && !check(oldPin)) {
     return { error: 'Incorrect pin.' }
@@ -25,10 +37,14 @@ export function update ({ oldPin, newPin }) {
   return {}
 }
 
+/**
+ * Initialize module.
+ * @param {StorageArea} storage
+ */
 export async function init (storage) {
   _storage = storage
   return new Promise((resolve, reject) => {
-    chrome.storage.local.get([PIN_STORAGE_KEY], (result) => {
+    _storage.get([PIN_STORAGE_KEY], (result) => {
       if (result && result[PIN_STORAGE_KEY]) {
         _pin = result[PIN_STORAGE_KEY]
         log.debug('loaded pin from storage using key=' + PIN_STORAGE_KEY)

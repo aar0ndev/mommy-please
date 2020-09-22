@@ -1,34 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Mommy Please extension</title>
-    <link rel="stylesheet" href="../app.css" type="text/css" />
-    <link rel="stylesheet" href="./popup.css" type="text/css" />
-  </head>
 
-  <body>
-    <h1 class="appname">
-      Mommy-Please<img class="logo" src="../icons/32.png" />
-    </h1>
-    <h2>An extension to monitor and control websites visited by children.</h2>
-    <div class="remove-unblock-section">
-      <p>
-        This site is unblocked <span class="timeLeft">X</span
-        ><span class="timeLeftUnits">more hours</span>.
-      </p>
-      <button class="block">Block Now</button>
-    </div>
-    <a
-      href="/options/options.html"
-      style="margin-top: 20px; display: block;"
-      target="options"
-      ><img
-        src="../icons/gear-32.png"
-        style="vertical-align: middle; margin-right: 5px;"
-      />Options</a
-    >
-    <script src="popup.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mommy Please extension</title>
+  <link rel="stylesheet" href="../app.css" type="text/css" />
+  <link rel="stylesheet" href="./popup.css" type="text/css" />
+</head>
+
+<body>
+  <h1 class="appname">
+    Mommy-Please<img class="logo" src="../icons/32.png" />
+  </h1>
+  <h2>An extension to monitor and control websites visited by children.</h2>
+  <div class="remove-unblock-section">
+    <p>
+      This site is unblocked <span class="timeLeft">X</span><span class="timeLeftUnits">more hours</span>.
+    </p>
+    <button class="block">Block Now</button>
+  </div>
+  <a href="/options/options.html" style="margin-top: 20px; display: block;" target="options"><img
+      src="../icons/gear-32.png" style="vertical-align: middle; margin-right: 5px;" />Options</a>
+  <script src="popup.js" type="module"></script>
+</body>
+
 </html>

@@ -1,72 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Mommy-Please Options</title>
-    <link rel="stylesheet" href="../app.css" type="text/css" />
-    <link rel="stylesheet" href="./options.css" type="text/css" />
-  </head>
 
-  <body>
-    <h1 class="title noPin">
-      Welcome to <span class="appname">Mommy-Please</span>
-    </h1>
-    <div id="setPinSection" class="section noPin">
-      <p id="message">Please set a pin to something only you will know.</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mommy-Please Options</title>
+  <link rel="stylesheet" href="../app.css" type="text/css" />
+  <link rel="stylesheet" href="./options.css" type="text/css" />
+</head>
+
+<body>
+  <h1 class="title noPin">
+    Welcome to <span class="appname">Mommy-Please</span>
+  </h1>
+  <div id="setPinSection" class="section noPin">
+    <p id="message">Please set a pin to something only you will know.</p>
+    <form>
+      <div>
+        <label for="setPin1">Enter 4-digit pin:</label><br /><input type="password" id="setPin1" />
+      </div>
+      <div>
+        <label for="setPin2">Confirm pin:</label><br /><input type="password" id="setPin2" />
+      </div>
+      <div>
+        <button id="btnSetPin" type="submit">Set Pin</button>
+      </div>
+    </form>
+  </div>
+
+  <h1 class="title hasPin">
+    Options for <span class="appname">Mommy-Please</span>
+  </h1>
+  <div id="updatePinSection" class="section hasPin">
+    <div>
+      <button id="btnUpdatePinStart">Change Pin</button>
+    </div>
+    <div id="paneUpdatePin">
+      <p id="message">Please set the pin to something only you will know.</p>
       <form>
         <div>
-          <label for="setPin1">Enter 4-digit pin:</label><br /><input
-            type="password"
-            id="setPin1"
-          />
+          <label for="updatePin0">Enter current pin:</label><br /><input type="password" id="updatePin0" />
         </div>
         <div>
-          <label for="setPin2">Re-enter 4-digit pin:</label><br /><input
-            type="password"
-            id="setPin2"
-          />
+          <label for="updatePin1">Enter new pin:</label><br /><input type="password" id="updatePin1" />
         </div>
         <div>
-          <button id="btnSetPin" type="submit">Set Pin</button>
+          <label for="updatePin2">Confirm new pin:</label><br /><input type="password" id="updatePin2" />
+        </div>
+        <div>
+          <button id="btnUpdatePin" type="submit">Update Pin</button>
         </div>
       </form>
     </div>
+  </div>
+  <script src="options.js" type="module"></script>
+</body>
 
-    <h1 class="title hasPin">
-      Options for <span class="appname">Mommy-Please</span>
-    </h1>
-    <div id="updatePinSection" class="section hasPin">
-      <div>
-        <button id="btnUpdatePinStart">Change Pin</button>
-      </div>
-      <div id="paneUpdatePin">
-        <p id="message">Please set the pin to something only you will know.</p>
-        <form>
-          <div>
-            <label for="updatePin0">Enter current pin:</label><br /><input
-              type="password"
-              id="updatePin0"
-            />
-          </div>
-          <div>
-            <label for="updatePin1">Enter new pin:</label><br /><input
-              type="password"
-              id="updatePin1"
-            />
-          </div>
-          <div>
-            <label for="updatePin2">Re-enter new pin:</label><br /><input
-              type="password"
-              id="updatePin2"
-            />
-          </div>
-          <div>
-            <button id="btnUpdatePin" type="submit">Update Pin</button>
-          </div>
-        </form>
-      </div>
-    </div>
-    <script src="options.js"></script>
-  </body>
 </html>

@@ -30,11 +30,11 @@ body {
   display: none;
 }
 
-body.state-request .request {
+body[data-state="request"] .request {
   display: unset;
 }
 
-body.state-confirm .confirm {
+body[data-state="confirm"] .confirm {
   display: unset;
 }
 

@@ -1,27 +1,30 @@
 /* global chrome */
 import { Log, LogLevel } from '../common/log.js'
 import { getTimestampFromHours } from '../common/util.js'
-import { authUnblock } from './auth.js'
+import * as auth from './auth.js'
+import * as msgType from '../common/msg.js'
 import * as pin from './pin.js'
 import * as whitelist from './whitelist.js'
 
-const log = new Log('background', LogLevel.DEBUG)
+const log = new Log('background', LogLevel.INFO)
 const extensionBaseUrl = chrome.runtime.getURL('/')
 
 /**
- * Try to unblock url with pin, return error if it fails.
- * @param {*} param0
+ * Try to unblock `url` with pin passed as`testPin`.
+ * @param {string} url
+ * @param {string} testPin - pin to try
+ * @param {number} timestamp - when unblock expires
  */
-function unblock ({ url, testPin, timestamp }) {
+function tryUnblockPin (url, testPin, timestamp) {
   const { blocked } = whitelist.check(url)
   if (!blocked) {
     // unblock all
-    redirectAll()
+    redirectTabs()
     return {}
   }
   if (pin.check(testPin)) {
-    if (whitelist.addUrl({ url, timestamp })) {
-      redirectAll()
+    if (whitelist.addUrl(url, timestamp)) {
+      redirectTabs()
     } else {
       log.error('problem adding url to whitelist, did not unblock any tabs')
     }
@@ -37,32 +40,68 @@ function unblock ({ url, testPin, timestamp }) {
 }
 
 /**
- * Blocks any tabs with matching url.
+ * Request unblock from authorized devices.
  */
-function block ({ url }) {
-  whitelist.removeUrl({ url })
-  redirectAll()
-  return {}
+function tryUnblockAuth (url) {
+  auth.unblock(url).then(({ status, hours, url }) => {
+    log.debug({ comment: 'auth.unblock returned', status, url, hours })
+    if (status === 'ok') {
+      const timestamp = getTimestampFromHours(hours)
+      if (!whitelist.addUrl(url, timestamp)) {
+        log.warn({
+          comment: 'url already in whitelist',
+          method: 'tryUnblockAuth'
+        })
+      }
+      redirectTabs()
+    }
+  })
 }
 
 /**
- * Redirect tabs to reflect current state of whitelist.
+ * Redirect any tabs as needed according to whitelist.
  */
-function redirectAll () {
+function redirectTabs () {
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach(({ id, url }) => {
-      const isExtUrl = url.startsWith(extensionBaseUrl)
-      if (!url.startsWith('http') && !isExtUrl) return
-      const normalUrl = isExtUrl ? url.split('#')[1] : url
-      const { blocked } = whitelist.check(normalUrl)
-      if (isExtUrl && !blocked) {
-        chrome.tabs.update(id, { url: normalUrl })
-      } else if (!isExtUrl && blocked) {
-        const redirectUrl = chrome.runtime.getURL('/block/block.html#' + url)
-        chrome.tabs.update(id, { url: redirectUrl })
+      const isExtensionTab = url.startsWith(extensionBaseUrl)
+      if (isExtensionTab) {
+        const targetUrl = url.split('#')[1]
+        const { blocked } = whitelist.check(targetUrl)
+        if (!blocked) {
+          redirectUnblockTab(id, targetUrl)
+        }
+      } else {
+        if (!url.startsWith('http')) {
+          // ignore non http(s) urls
+          return
+        }
+        const { blocked } = whitelist.check(url)
+        if (blocked) {
+          redirectBlockTab(id, url)
+        }
       }
     })
   })
+}
+
+/**
+ * Block a single tab.
+ * @param {*} tabId
+ * @param {*} targetUrl
+ */
+function redirectBlockTab (tabId, targetUrl) {
+  const url = chrome.runtime.getURL('/block/block.html#' + targetUrl)
+  chrome.tabs.update(tabId, { url })
+}
+
+/**
+ * Unblock a single tab.
+ * @param {*} tabId
+ * @param {*} targetUrl
+ */
+function redirectUnblockTab (tabId, targetUrl) {
+  chrome.tabs.sendMessage(tabId, { type: 'redirect', targetUrl })
 }
 
 /**
@@ -90,33 +129,36 @@ function onMessage (msg, sender, sendResponse) {
   let res = { result: false }
   try {
     if (msg && msg.type) {
-      if (msg.type === 'block') {
-        const { url, tabId } = msg
-        const { error } = block({ url, tabId })
+      if (msg.type === msgType.MSG_BLOCK) {
+        const { url } = msg
+        const whitelistUpdated = whitelist.removeUrl(url)
+        redirectTabs()
+        const error = !whitelistUpdated && 'could not remove from whitelist'
         res = { result: !error, error }
-      } else if (msg.type === 'try-unblock') {
+      } else if (msg.type === msgType.MSG_UNBLOCK_PIN) {
         const { testPin, url, hours } = msg
         const timestamp = getTimestampFromHours(hours)
-        const { error } = unblock({ url, testPin, timestamp })
-        res = { result: !error, url: msg.url, error }
-      } else if (msg.type === 'unblock-auth-request') {
-        authUnblock({ url: msg.url, sender })
+        const { error } = tryUnblockPin(url, testPin, timestamp)
+        res = { result: !error, url, error }
+      } else if (msg.type === msgType.MSG_UNBLOCK_AUTH) {
+        const { url } = msg
+        tryUnblockAuth(url)
         res = { result: true }
-      } else if (msg.type === 'check-url') {
+      } else if (msg.type === msgType.MSG_CHECK_URL) {
         const { blocked, timeLeft } = whitelist.check(msg.url)
         res = { result: true, url: msg.url, blocked, timeLeft }
-      } else if (msg.type === 'update-pin') {
+      } else if (msg.type === msgType.MSG_UPDATE_PIN) {
         const { newPin, oldPin } = msg
         const { error } = pin.update({ oldPin, newPin })
         res = { result: !error, error }
-      } else if (msg.type === 'check-pin') {
+      } else if (msg.type === msgType.MSG_CHECK_PIN) {
         const { testPin } = msg
         error = pin.check(testPin)
         res = { result: !error, error }
-      } else if (msg.type === 'check-status') {
+      } else if (msg.type === msgType.MSG_CHECK_STATUS) {
         res = { result: true, pinSet: pin.isSet() }
-      } else if (msg.type === 'redirect-all') {
-        redirectAll()
+      } else if (msg.type === msgType.MSG_REDIRECT_ALL) {
+        redirectTabs()
         res = { result: true }
       }
     }
@@ -134,6 +176,7 @@ function onMessage (msg, sender, sendResponse) {
  * @param {*} details
  */
 function onBeforeRequest (details) {
+  const method = 'onBeforeRequest'
   const { type, url, tabId } = details
   // ignore requests for extension assets or special protocols
   if (!url.startsWith('http')) {
@@ -143,7 +186,7 @@ function onBeforeRequest (details) {
   // ignore anything that is not a web page
   if (type !== 'main_frame') {
     log.debug({
-      method: 'onBeforeRequest',
+      method,
       comment: 'not a main_frame, ignoring',
       details
     })
@@ -153,17 +196,18 @@ function onBeforeRequest (details) {
   // filter requests based on whitelist
   if (whitelist.check(url).blocked) {
     log.info({
-      method: 'onBeforeRequest',
+      method,
       url,
       comment: 'not in whitelist, blocking!'
     })
-    const redirectUrl = chrome.runtime.getURL('/block/block.html#' + url)
-    chrome.tabs.update(tabId, { url: redirectUrl })
+    // const redirectUrl = chrome.runtime.getURL('/block/block.html#' + url)
+    // chrome.tabs.update(tabId, { url: redirectUrl })
+    redirectBlockTab(tabId, url)
     log.prune()
     return
   }
   log.debug({
-    method: 'onBeforeRequest',
+    method,
     comment: 'ok',
     details
   })

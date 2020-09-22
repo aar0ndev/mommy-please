@@ -9,37 +9,37 @@
   <link rel="stylesheet" href="./block.css" type="text/css" />
 </head>
 
-<body class="state-request">
-<div class="pad-top"></div>
-<div class="container">
-  <h1 class="appname">Mommy-Please<img class="logo" src="../icons/48.png"></h1>
-  <h3 class="domain">&nbsp;</h3>
-  <h2 class="hide request confirm">This page has been blocked.</h2>
-  <div class="hide request">
-    <p>Click the button below to request an unblock.</p>
-    <button class="ask-mommy">Ask Mommy</button>
-  </div>
-  <form>
-    <div class="hide confirm">
-
-      <p>Enter pin to unblock for
-        <select class="duration">
-          <option value="1">1 hour</option>
-          <option value="24" selected>1 day</option>
-          <option value="-1">Forever</option>
-        </select>
-        or unblock from an authorized device.</p>
-      <input id="pinInput" class="password" type="password" />
-      </label>
-      <button class="unblock" type="submit">Unblock</button>
-
+<body data-state="request">
+  <div class="pad-top"></div>
+  <div class="container">
+    <h1 class="appname">Mommy-Please<img class="logo" src="../icons/48.png"></h1>
+    <h3 class="domain">&nbsp;</h3>
+    <h2 class="hide request confirm">This page has been blocked.</h2>
+    <div class="hide request">
+      <p>Click the button below to request an unblock.</p>
+      <button class="ask-mommy">Ask Mommy</button>
     </div>
-  </form>
-  <p class="error"></p>
+    <form>
+      <div class="hide confirm">
 
-</div>
-<div class="pad-bottom"></div>
-<script type="module" src="block.js"></script>
+        <p>Enter pin to unblock for
+          <select class="duration">
+            <option value="1">1 hour</option>
+            <option value="24" selected>1 day</option>
+            <option value="-1">Forever</option>
+          </select>
+          or unblock from an authorized device.</p>
+        <input id="pinInput" class="password" type="password" />
+        </label>
+        <button class="unblock" type="submit">Unblock</button>
+
+      </div>
+    </form>
+    <p class="error"></p>
+
+  </div>
+  <div class="pad-bottom"></div>
+  <script type="module" src="block.js"></script>
 </body>
 
 </html>
