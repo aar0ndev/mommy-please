@@ -14,7 +14,7 @@
     Welcome to <span class="appname">Mommy-Please</span>
   </h1>
   <div id="setPinSection" class="section noPin">
-    <p id="message">Please set a pin to something only you will know.</p>
+    <p class="message">Please set a pin to something only you will know.</p>
     <form>
       <div>
         <label for="setPin1">Enter 4-digit pin:</label><br /><input type="password" id="setPin1" />
@@ -31,21 +31,22 @@
   <h1 class="title hasPin">
     Options for <span class="appname">Mommy-Please</span>
   </h1>
+  <p class="hasPin message"></p>
   <div id="updatePinSection" class="section hasPin">
     <div>
       <button id="btnUpdatePinStart">Change Pin</button>
     </div>
     <div id="paneUpdatePin">
-      <p id="message">Please set the pin to something only you will know.</p>
+
       <form>
         <div>
-          <label for="updatePin0">Enter current pin:</label><br /><input type="password" id="updatePin0" />
+          <label for="updatePinOld">Enter current pin:</label><br /><input type="password" id="updatePinOld" />
         </div>
         <div>
-          <label for="updatePin1">Enter new pin:</label><br /><input type="password" id="updatePin1" />
+          <label for="newPin1">Enter new pin:</label><br /><input type="password" id="newPin1" />
         </div>
         <div>
-          <label for="updatePin2">Confirm new pin:</label><br /><input type="password" id="updatePin2" />
+          <label for="newPin2">Confirm new pin:</label><br /><input type="password" id="newPin2" />
         </div>
         <div>
           <button id="btnUpdatePin" type="submit">Update Pin</button>

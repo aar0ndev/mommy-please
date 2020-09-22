@@ -3,20 +3,20 @@ import { Log, LogLevel } from '../common/log.js'
 import * as msgType from '../common/msg.js'
 
 const log = new Log('options', LogLevel.DEBUG)
-const pinRegex = /[0-9]{4}/
+const pinRegex = /^[0-9]{4}$/
 
-const elMessage = document.querySelector('#message')
+const elMessages = document.querySelectorAll('.message')
 
-const elSectionSetPin = document.querySelector('#setPinSection')
+// const elSectionSetPin = document.querySelector('#setPinSection')
 const elInputSetPin1 = document.querySelector('#setPin1')
 const elInputSetPin2 = document.querySelector('#setPin2')
 const elButtonSetPin = document.querySelector('#btnSetPin')
 
 const elSectionUpdatePin = document.querySelector('#updatePinSection')
 const elButtonUpdatePin1 = document.querySelector('#btnUpdatePinStart')
-const elOldPin = document.querySelector('#updatePin0')
-const elNewPin1 = document.querySelector('#updatePin1')
-const elNewPin2 = document.querySelector('#updatePin2')
+const elInputOldPin = document.querySelector('#updatePinOld')
+const elInputNewPin1 = document.querySelector('#newPin1')
+const elInputNewPin2 = document.querySelector('#newPin2')
 const elButtonUpdatePin2 = document.querySelector('#btnUpdatePin')
 
 /**
@@ -26,17 +26,13 @@ const elButtonUpdatePin2 = document.querySelector('#btnUpdatePin')
  * @param {Array<Element>} errElements
  */
 function uiShowMessage ({ msg, isError, errElements }) {
-  elMessage.innerText = msg
+  elMessages.forEach((el) => (el.innerText = msg))
   const oldErrElements = document.querySelectorAll('.error')
   oldErrElements.forEach((el) => el.classList.remove('error'))
   if (isError) {
-    elMessage.classList.add('error')
-    ;(errElements || []).forEach((el) => el.classList.add('error'))
+    elMessages.forEach((el) => el.classList.add('error'))
+    ;(errElements || []).forEach((el) => el && el.classList.add('error'))
   }
-}
-
-function uiSetState (state) {
-  document.body.dataset.state = state
 }
 
 /**
@@ -67,7 +63,7 @@ function validateNewPinValues (pin, pinConfirm) {
   return errors
 }
 
-function tryUpdatePin ({ oldInput, newInputs, section }, callback) {
+async function tryUpdatePin ({ oldInput, newInputs }) {
   const errors = validateNewPinValues(...newInputs.map((e) => e.value))
   if (errors.length) {
     const error = errors[0]
@@ -77,29 +73,40 @@ function tryUpdatePin ({ oldInput, newInputs, section }, callback) {
       errElements: [newInputs[error.inputIndex]]
     })
     newInputs[error.inputIndex].focus()
-    return
+    return false
   }
 
   var oldPin = oldInput && oldInput.value
   var newPin = newInputs[0].value
 
-  chrome.runtime.sendMessage(
-    { type: msgType.MSG_UPDATE_PIN, oldPin, newPin },
-    (response) => {
-      if (response.result) {
-        section.style.display = 'None'
-        uiShowMessage({ msg: 'Success!' })
-        callback && callback(null)
-      } else if (response.error) {
-        uiShowMessage({
-          msg: response.error,
-          isError: true,
-          errElements: [oldInput]
-        })
-        callback && callback(response.error)
+  try {
+    await updatePin(oldPin, newPin)
+    uiShowMessage({ msg: 'Success!' })
+    return true
+  } catch (err) {
+    uiShowMessage({
+      msg: err.error,
+      isError: true,
+      errElements: [oldInput]
+    })
+    oldInput.focus()
+  }
+  return false
+}
+
+function updatePin (oldPin, newPin) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(
+      { type: msgType.MSG_UPDATE_PIN, oldPin, newPin },
+      (response) => {
+        if (response.result) {
+          resolve(response)
+        } else {
+          reject(response)
+        }
       }
-    }
-  )
+    )
+  })
 }
 
 /**
@@ -126,34 +133,35 @@ async function getStatus () {
   })
 }
 
-function onButtonSetPin (e) {
+async function onClickButtonSetPin (e) {
   e.preventDefault()
-  tryUpdatePin(
-    {
-      oldInput: null,
-      newInputs: [elInputSetPin1, elInputSetPin2],
-      section: elSectionSetPin
-    },
-    function (err) {
-      if (!err) {
-        window.close()
-      }
-    }
-  )
+  const res = await tryUpdatePin({
+    oldInput: null,
+    newInputs: [elInputSetPin1, elInputSetPin2]
+  }).catch(log.error)
+  if (res) {
+    window.close()
+  }
 }
 
 function onClickButtonUpdate1 (e) {
   e.preventDefault()
   elSectionUpdatePin.classList.add('active')
+  document.querySelector('.message.hasPin').innerText =
+    'Please set the pin to something only you will know.'
+  elInputOldPin.focus()
 }
 
-function onClickButtonUpdate2 (e) {
+async function onClickButtonUpdate2 (e) {
   e.preventDefault()
-  tryUpdatePin({
-    oldInput: elOldPin,
-    newInputs: [elNewPin1, elNewPin2],
-    section: elSectionUpdatePin
-  })
+  const res = await tryUpdatePin({
+    oldInput: elInputOldPin,
+    newInputs: [elInputNewPin1, elInputNewPin2]
+  }).catch(log.error)
+  if (res) {
+    document.querySelectorAll('input').forEach((el) => (el.value = ''))
+    elSectionUpdatePin.classList.remove('active')
+  }
 }
 
 ;(async function init () {
@@ -161,20 +169,16 @@ function onClickButtonUpdate2 (e) {
     log.error(err)
     uiShowMessage({
       msg: (status && status.error) || 'Internal error',
-      isError: true,
-      errElements: []
+      isError: true
     })
   })
 
   if (!status) return
 
-  if (status.pinSet) {
-    uiSetState('hasPin')
-  } else {
-    uiSetState('noPin')
-  }
+  document.body.dataset.pinSet = !!status.pinSet
+  if (!status.pinSet) elInputSetPin1.focus()
 
   elButtonUpdatePin2.addEventListener('click', onClickButtonUpdate2)
   elButtonUpdatePin1.addEventListener('click', onClickButtonUpdate1)
-  elButtonSetPin.addEventListener('click', onButtonSetPin)
+  elButtonSetPin.addEventListener('click', onClickButtonSetPin)
 })()

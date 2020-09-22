@@ -1,10 +1,9 @@
 body {
   margin: 25px;
   opacity: 0;
-  transition: opacity 300ms;
 }
 
-body[data-state] {
+body[data-pin-set] {
   opacity: 1;
 }
 
@@ -15,11 +14,11 @@ body[data-state] {
   display: none;
 }
 
-body[data-state="hasPin"] .hasPin {
+body[data-pin-set="true"] .hasPin {
   display: block;
 }
 
-body[data-state="noPin"] .noPin {
+body[data-pin-set="false"] .noPin {
   display: block;
 }
 
@@ -35,7 +34,7 @@ body[data-state="noPin"] .noPin {
   display: none;
 }
 
-#message.error {
+.message.error {
   color: #a00;
 }
 
@@ -45,4 +44,8 @@ input.error {
 
 input.error:focus {
   outline-color: #a00;
+}
+
+input {
+  margin-bottom: 0.5em;
 }
