@@ -1,0 +1,23 @@
+/status
+    -> get - backend check
+
+/client
+    -> get - retrieve client ID, used to "fingerprint" extensions to acheive consistency even when removed. Probably using cookies.
+
+    Problem is that when extension removed, it will delete anything in it's cache and thereby forget who it is. 
+    Therefore it should call home to see if it already has a clientId before asking for a new one.
+
+    -> get /{clientId} - retrieve information for this clientId
+
+        { status: 'ok', hasUnblockers: 0, clientId: 'xyz', name: null }
+
+    Mechanism whereby client can get updated information from server.
+
+    -> post - ask for a new ID to use in further communications. (needs rate limiting, probably only allow once every 5 minutes per IP)
+
+    If all else fails, or on initial install, we need to ask for a new clientId... perhaps this is all just session 
+    management???
+
+/unblocker
+    -> get /{unblockerId}
+    -> post /{unblockerId}
