@@ -143,9 +143,9 @@ function onMessage (msg, sender, sendResponse) {
         const { error } = tryUnblockPin(url, testPin, timestamp)
         res = { result: !error, url, error }
       } else if (msg.type === msgType.MSG_UNBLOCK_AUTH) {
-        const { url } = msg
-        tryUnblockAuth(url)
-        res = { result: true }
+        // const { url } = msg
+        // tryUnblockAuth(url)
+        // res = { result: true }
       } else if (msg.type === msgType.MSG_CHECK_URL) {
         const { blocked, timeLeft } = whitelist.check(msg.url)
         res = { result: true, url: msg.url, blocked, timeLeft }
