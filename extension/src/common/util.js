@@ -12,6 +12,12 @@ export function getDomain (url) {
   if (domainMatch && domainMatch.length) {
     domain = domainMatch[1]
   }
+
+  // treat www.<whitelisted domain> specially
+  if (domain && domain.startsWith('www.')) {
+    domain = domain.slice(4)
+  }
+
   return domain
 }
 
