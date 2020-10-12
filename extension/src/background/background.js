@@ -237,7 +237,7 @@ function addListeners () {
 ;(async function init () {
   log.debug({ method: 'init' })
   addListeners()
-  await whitelist.init(chrome.storage.sync).catch((err) => log.warn(err))
+  await whitelist.init(chrome.storage.local).catch((err) => log.warn(err))
   await pin.init(chrome.storage.sync).catch((err) => log.warn(err))
   log.prune()
 })()
