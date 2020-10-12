@@ -173,60 +173,96 @@ function onMessage (msg, sender, sendResponse) {
   log.prune()
 }
 
-/**
- * Extension request handler.
- * @param {*} details
- */
-function onBeforeRequest (details) {
-  const method = 'onBeforeRequest'
-  const { type, url, tabId } = details
+// /**
+//  * Extension request handler.
+//  * @param {*} details
+//  */
+// function onHeadersReceived (details) {
+//   const method = 'onHeadersReceived'
+//   const { url, type, tabId, statusCode } = details
+//   // ignore requests for extension assets or special protocols
+//   if (!url.startsWith('http')) {
+//     return
+//   }
+
+//   // ignore anything that is not a web page
+//   if (type !== 'main_frame') {
+//     // log.debug({
+//     //   method,
+//     //   comment: 'not a main_frame, ignoring',
+//     //   details
+//     // })
+//     return
+//   }
+
+//   if (statusCode === 301 || statusCode === 302 || statusCode === 307) {
+//     log.debug({
+//       method,
+//       comment: 'redirect detected, ignoring',
+//       details
+//     })
+//     return
+//   }
+
+//   // filter requests based on whitelist
+//   if (whitelist.check(url).blocked) {
+//     log.info({
+//       method,
+//       url,
+//       comment: 'not in whitelist, blocking!'
+//     })
+
+//     redirectBlockTab(tabId, url)
+//     log.prune()
+//     return
+//   }
+
+//   log.debug({
+//     method,
+//     comment: 'ok',
+//     details
+//   })
+// }
+
+function onTabUpdated (tabId, changeInfo, tab) {
+  const { url } = tab
+
   // ignore requests for extension assets or special protocols
   if (!url.startsWith('http')) {
     return
   }
 
-  // ignore anything that is not a web page
-  if (type !== 'main_frame') {
-    log.debug({
-      method,
-      comment: 'not a main_frame, ignoring',
-      details
-    })
+  if (changeInfo.status !== 'loading') {
     return
   }
+
+  log.debug({ method: 'onTabUpdated', changeInfo, tab })
 
   // filter requests based on whitelist
   if (whitelist.check(url).blocked) {
     log.info({
-      method,
+      method: 'onTabUpdated',
       url,
       comment: 'not in whitelist, blocking!'
     })
-    // const redirectUrl = chrome.runtime.getURL('/block/block.html#' + url)
-    // chrome.tabs.update(tabId, { url: redirectUrl })
     redirectBlockTab(tabId, url)
     log.prune()
-    return
   }
-  log.debug({
-    method,
-    comment: 'ok',
-    details
-  })
 }
 
 /**
  * Attach listeners for requests and messages.
  */
 function addListeners () {
-  var filter = { urls: ['<all_urls>'] }
-  var optExtraInfoSpec = ['blocking']
+  // var filter = { urls: ['<all_urls>'] }
+  // var optExtraInfoSpec = []
+  // chrome.webRequest.onHeadersReceived.addListener(
+  //   onHeadersReceived,
+  //   filter,
+  //   optExtraInfoSpec
+  // )
 
-  chrome.webRequest.onBeforeRequest.addListener(
-    onBeforeRequest,
-    filter,
-    optExtraInfoSpec
-  )
+  chrome.tabs.onUpdated.addListener(onTabUpdated)
   chrome.runtime.onMessage.addListener(onMessage)
   chrome.runtime.onInstalled.addListener(onInstalled)
 }
