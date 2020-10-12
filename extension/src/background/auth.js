@@ -1,9 +1,8 @@
-import { Log, LogLevel } from '../common/log.js'
-
+import { Log } from '../common/log.js'
+import { LOG_LEVEL } from '../common/const.js'
 const DEFAULT_TIMEOUT = 60 * 10 * 1000
 const DEFAULT_UNBLOCK_HOURS = 1
-const API_URL = 'http://localhost:3030'
-const log = new Log('auth.js', LogLevel.INFO)
+const log = new Log('auth.js', LOG_LEVEL)
 
 /**
  * @typedef {Object} UnblockAuthResponse

@@ -1,6 +1,7 @@
-import { Log, LogLevel } from '../common/log.js'
+import { Log } from '../common/log.js'
+import { LOG_LEVEL } from '../common/const.js'
 
-const log = new Log('pin.js', LogLevel.INFO)
+const log = new Log('pin.js', LOG_LEVEL)
 const PIN_STORAGE_KEY = '__pin'
 let _pin = null
 let _storage = null

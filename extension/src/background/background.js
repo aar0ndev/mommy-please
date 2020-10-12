@@ -1,12 +1,13 @@
 /* global chrome */
-import { Log, LogLevel } from '../common/log.js'
+import { Log } from '../common/log.js'
+import { LOG_LEVEL } from '../common/const.js'
 import { getTimestampFromHours } from '../common/util.js'
 import * as auth from './auth.js'
 import * as msgType from '../common/msg.js'
 import * as pin from './pin.js'
 import * as whitelist from './whitelist.js'
 
-const log = new Log('background', LogLevel.INFO)
+const log = new Log('background', LOG_LEVEL)
 const extensionBaseUrl = chrome.runtime.getURL('/')
 
 /**

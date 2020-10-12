@@ -1,8 +1,9 @@
 /* global chrome */
 import { getDomain } from '../common/util.js'
-import { Log, LogLevel } from '../common/log.js'
+import { Log } from '../common/log.js'
+import { LOG_LEVEL } from '../common/const.js'
 
-const log = new Log('block', LogLevel.INFO)
+const log = new Log('block', LOG_LEVEL)
 const elInputPassword = document.querySelector('input.password')
 const elSelectDuration = document.querySelector('select.duration')
 const elError = document.querySelector('p.error')

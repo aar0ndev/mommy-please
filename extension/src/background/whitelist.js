@@ -1,7 +1,8 @@
 import { getDomain } from '../common/util.js'
-import { Log, LogLevel } from '../common/log.js'
+import { Log } from '../common/log.js'
+import { LOG_LEVEL } from '../common/const.js'
 
-const log = new Log('whitelist.js', LogLevel.INFO)
+const log = new Log('whitelist.js', LOG_LEVEL)
 const WHITELIST_STORAGE_KEY = '__whitelist'
 let _whitelist = {}
 let _storage = null
