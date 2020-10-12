@@ -67,7 +67,7 @@ function redirectTabs () {
     tabs.forEach(({ id, url }) => {
       const isExtensionTab = url.startsWith(extensionBaseUrl)
       if (isExtensionTab) {
-        const targetUrl = url.split('#')[1]
+        const targetUrl = url.slice(url.indexOf('?') + 1)
         const { blocked } = whitelist.check(targetUrl)
         if (!blocked) {
           redirectUnblockTab(id, targetUrl)
@@ -92,8 +92,9 @@ function redirectTabs () {
  * @param {*} targetUrl
  */
 function redirectBlockTab (tabId, targetUrl) {
-  const url = chrome.runtime.getURL('/block/block.html#' + targetUrl)
-  chrome.tabs.update(tabId, { url })
+  const url = chrome.runtime.getURL('/block/block.html?' + targetUrl)
+  // get tab before calling update in case it does not exist
+  chrome.tabs.get(tabId, (tab) => tab && chrome.tabs.update(tab.id, { url }))
 }
 
 /**

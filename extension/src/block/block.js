@@ -41,7 +41,7 @@ function uiShowError (error) {
 function onClickAsk (e) {
   log.debug({ method: 'onClickAsk', e })
   uiSetState('confirm')
-  const targetUrl = window.location.hash.substr(1)
+  const targetUrl = window.location.search.slice(1)
   chrome.runtime.sendMessage({
     type: 'try-unblock-auth',
     url: targetUrl
@@ -57,7 +57,7 @@ function onClickUnblock (e) {
   e.preventDefault()
   log.debug({ method: 'onClickUnblock', e })
   uiShowError('') // clear error
-  var url = window.location.hash.substr(1)
+  var url = window.location.search.slice(1)
   var hours = elSelectDuration.value
   var testPin = elInputPassword.value
   chrome.runtime.sendMessage(
@@ -100,7 +100,7 @@ function messageHandler (message, sender, sendResponse) {
 }
 
 ;(function init () {
-  const url = window.location.hash.slice(1)
+  const url = window.location.search.slice(1)
   elDomain.innerText = getDomain(url)
 
   elButtonAsk.focus()
