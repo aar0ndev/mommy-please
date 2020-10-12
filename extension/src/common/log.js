@@ -16,19 +16,24 @@ function Log (name, level) {
   return { debug, info, warn, error, clear, prune, setLevel }
 
   function debug (data) {
-    _log(LogLevel.DEBUG, data)
+    _log(LogLevel.DEBUG, data, console.debug)
   }
 
   function info (data) {
-    _log(LogLevel.INFO, data)
+    _log(LogLevel.INFO, data, console.info)
   }
 
   function warn (data) {
-    _log(LogLevel.WARN, data)
+    _log(LogLevel.WARN, data, console.warn)
   }
 
   function error (data) {
-    _log(LogLevel.ERROR, data)
+    // try to guess if an error was passed
+    if (data.stack && data.message) {
+      _log(LogLevel.ERROR, { error: data }, console.error)
+    } else {
+      _log(LogLevel.ERROR, data, console.error)
+    }
   }
 
   function clear () {
@@ -58,17 +63,13 @@ function Log (name, level) {
     localStorage.setItem(_.logKey, JSON.stringify(logData))
   }
 
-  function _log (level, data) {
+  function _log (level, data, consoleLog) {
     if (level.val < _.level.val) {
       return
     }
-    console.debug(`[${level.name}]`, data)
+    consoleLog(`[${level.name}]`, data)
     const logList = _getAll()
 
-    // try to guess if an error was passed
-    if (data.stack && data.message) {
-      data = { error: data.message }
-    }
     logList.push({ date: new Date(), level: level.name, data })
     _updateAll(logList)
   }
