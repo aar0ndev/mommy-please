@@ -1,5 +1,5 @@
 import { Log } from '../common/log.js'
-import { LOG_LEVEL } from '../common/const.js'
+import { LOG_LEVEL, API_URL } from '../common/const.js'
 const DEFAULT_TIMEOUT = 60 * 10 * 1000
 const DEFAULT_UNBLOCK_HOURS = 1
 const log = new Log('auth.js', LOG_LEVEL)
