@@ -81,7 +81,7 @@ async function tryUpdatePin ({ oldInput, newInputs }) {
 
   try {
     await updatePin(oldPin, newPin)
-    uiShowMessage({ msg: 'Success!' })
+    uiShowMessage({ msg: 'Pin updated successfully!' })
     return true
   } catch (err) {
     uiShowMessage({

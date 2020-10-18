@@ -14,16 +14,16 @@
     Welcome to <span class="appname">Mommy-Please</span>
   </h1>
   <div id="setPinSection" class="section noPin">
-    <p class="message">Please set a pin to something only you will know.</p>
+    <p class="message" data-test-set-message>Please set a pin to something only you will know.</p>
     <form>
       <div>
-        <label for="setPin1">Enter 4-digit pin:</label><br /><input type="password" id="setPin1" />
+        <label for="setPin1">Enter 4-digit pin:</label><br /><input type="password" id="setPin1" data-test-set-input1 />
       </div>
       <div>
-        <label for="setPin2">Confirm pin:</label><br /><input type="password" id="setPin2" />
+        <label for="setPin2">Confirm pin:</label><br /><input type="password" id="setPin2" data-test-set-input2 />
       </div>
       <div>
-        <button id="btnSetPin" type="submit">Set Pin</button>
+        <button id="btnSetPin" type="submit" data-test-set-button1>Set Pin</button>
       </div>
     </form>
   </div>
@@ -31,25 +31,29 @@
   <h1 class="title hasPin">
     Options for <span class="appname">Mommy-Please</span>
   </h1>
-  <p class="hasPin message"></p>
+
   <div id="updatePinSection" class="section hasPin">
+    <p class="hasPin message" data-test-update-message></p>
     <div>
-      <button id="btnUpdatePinStart">Change Pin</button>
+      <button id="btnUpdatePinStart" data-test-update-button1>Change Pin</button>
     </div>
     <div id="paneUpdatePin">
 
       <form>
         <div>
-          <label for="updatePinOld">Enter current pin:</label><br /><input type="password" id="updatePinOld" />
+          <label for="updatePinOld">Enter current pin:</label><br /><input type="password" id="updatePinOld"
+            data-test-update-input1 />
         </div>
         <div>
-          <label for="newPin1">Enter new pin:</label><br /><input type="password" id="newPin1" />
+          <label for="newPin1">Enter new pin:</label><br /><input type="password" id="newPin1"
+            data-test-update-input2 />
         </div>
         <div>
-          <label for="newPin2">Confirm new pin:</label><br /><input type="password" id="newPin2" />
+          <label for="newPin2">Confirm new pin:</label><br /><input type="password" id="newPin2"
+            data-test-update-input3 />
         </div>
         <div>
-          <button id="btnUpdatePin" type="submit">Update Pin</button>
+          <button id="btnUpdatePin" type="submit" data-test-update-button2>Update Pin</button>
         </div>
       </form>
     </div>
