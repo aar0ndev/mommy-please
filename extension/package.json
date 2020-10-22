@@ -2,9 +2,10 @@
   "name": "mommy-please",
   "version": "0.1.1",
   "description": "A Chrome Extension to help parents manage a childs web access.",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "e2e": "jest -i --testRegex e2e/test"
   },
   "repository": {
     "type": "git",
