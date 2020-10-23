@@ -16,6 +16,7 @@
         "--testRegex",
         "${relativeFile}"
       ],
+      "runtimeArgs": ["--experimental-vm-modules"],
       "internalConsoleOptions": "openOnSessionStart",
       "skipFiles": [
         "<node_internals>/**/*.js",
