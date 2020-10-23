@@ -2,7 +2,7 @@
 import { fakeStorage } from '../fakeChrome.js'
 console.info = () => {} // prevent console messages
 // eslint-disable-next-line import/first
-import * as whitelist from '../../background/whitelist.js'
+import * as whitelist from '../../src/background/whitelist.js'
 
 describe('whitelist', () => {
   it('exists', () => {
