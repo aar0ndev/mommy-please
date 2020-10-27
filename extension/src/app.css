@@ -13,7 +13,8 @@ body {
 button {
   min-width: 48px;
   min-height: 48px;
-  background: #a22;
+  padding: 10px 20px;
+  background: #444;
   color: white;
   border-radius: 5px;
   background-image: linear-gradient(
@@ -25,6 +26,10 @@ button {
       rgba(255, 255, 255, 0.5) 5%,
       rgba(255, 255, 255, 0) 7%
     );
+}
+
+button.primary {
+  background-color: #a22;
 }
 
 input {
@@ -39,7 +44,7 @@ input {
 
 input[type="text"],
 input[type="password"] {
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 input[type="password"] {
