@@ -49,3 +49,11 @@ input.error:focus {
 input {
   margin-bottom: 0.5em;
 }
+
+.hideMe {
+  display: none;
+}
+
+body.section-active .noActiveSection {
+  display: none;
+}

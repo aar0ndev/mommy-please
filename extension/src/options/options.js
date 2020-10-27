@@ -5,7 +5,11 @@ import * as msgType from '../common/msg.js'
 const log = new Log('options', LogLevel.DEBUG)
 const pinRegex = /^[0-9]{4}$/
 
-const elMessages = document.querySelectorAll('.message')
+const $ = (s) => document.querySelector(s)
+const $$ = (s) => document.querySelectorAll(s)
+
+const elMessages = $$('.message')
+const body = $('body')
 
 // const elSectionSetPin = document.querySelector('#setPinSection')
 const elInputSetPin1 = document.querySelector('#setPin1')
@@ -18,6 +22,63 @@ const elInputOldPin = document.querySelector('#updatePinOld')
 const elInputNewPin1 = document.querySelector('#newPin1')
 const elInputNewPin2 = document.querySelector('#newPin2')
 const elButtonUpdatePin2 = document.querySelector('#btnUpdatePin')
+
+$('.unblockAll .reset').addEventListener('click', () => {
+  chrome.runtime.sendMessage(
+    {
+      type: msgType.MSG_UNBLOCK_ALL,
+      hours: -1
+    },
+    function unblockAllCallback (response) {
+      window.location.reload()
+    }
+  )
+})
+
+$('.unblockAll .expand').addEventListener('click', () => {
+  setSectionActive(true)
+  $('.unblockAll .prompt').classList.remove('hideMe')
+  $('.unblockAll .prompt--input').focus()
+})
+
+$('.unblockAll form').addEventListener('submit', (e) => {
+  e.preventDefault()
+  const testPin = e.target.elements.pin.value
+  const hours = e.target.elements.duration.value
+  chrome.runtime.sendMessage(
+    { type: msgType.MSG_CHECK_PIN, testPin },
+    function checkPinCallback (response) {
+      log.debug({ method: 'checkPinCallback', response })
+      if (response && response.result === true) {
+        chrome.runtime.sendMessage(
+          { type: msgType.MSG_UNBLOCK_ALL, hours },
+          function unblockAllCallback (response) {
+            log.debug({ method: 'checkPinCallback', response })
+            if (window.location.hash === '#unblockAll') {
+              // from block screen
+              window.close()
+            } else {
+              window.location.reload()
+            }
+          }
+        )
+      } else if (response && response.error) {
+        const msg = $('.unblockAll .message')
+        msg.innerText = response.error
+        msg.classList.add('error')
+        const input = $('.unblockAll .prompt--input')
+        input.classList.add('error')
+        input.focus()
+      }
+    }
+  )
+})
+
+function setSectionActive (active) {
+  if (active !== body.classList.contains('section-active')) {
+    body.classList.toggle('section-active')
+  }
+}
 
 /**
  * Show message to the user.
@@ -82,6 +143,7 @@ async function tryUpdatePin ({ oldInput, newInputs }) {
   try {
     await updatePin(oldPin, newPin)
     uiShowMessage({ msg: 'Pin updated successfully!' })
+    setTimeout(() => window.location.reload(), 1000)
     return true
   } catch (err) {
     uiShowMessage({
@@ -124,8 +186,7 @@ async function getStatus () {
       response
     ) {
       if (response && response.result) {
-        const { pinSet } = response
-        resolve({ pinSet })
+        resolve(response)
       } else {
         reject(response)
       }
@@ -144,8 +205,8 @@ async function onClickButtonSetPin (e) {
   }
 }
 
-function onClickButtonUpdate1 (e) {
-  e.preventDefault()
+function onClickButtonUpdate1 () {
+  setSectionActive(true)
   elSectionUpdatePin.classList.add('active')
   document.querySelector('.message.hasPin').innerText =
     'Please set the pin to something only you will know.'
@@ -161,6 +222,7 @@ async function onClickButtonUpdate2 (e) {
   if (res) {
     document.querySelectorAll('input').forEach((el) => (el.value = ''))
     elSectionUpdatePin.classList.remove('active')
+    setSectionActive(false)
   }
 }
 
@@ -177,6 +239,12 @@ async function onClickButtonUpdate2 (e) {
 
   document.body.dataset.pinSet = !!status.pinSet
   if (!status.pinSet) elInputSetPin1.focus()
+
+  if (status.unblockAll) {
+    $('.unblockAll .reset').classList.remove('hideMe')
+  } else {
+    $('.unblockAll .expand').classList.remove('hideMe')
+  }
 
   elButtonUpdatePin2.addEventListener('click', onClickButtonUpdate2)
   elButtonUpdatePin1.addEventListener('click', onClickButtonUpdate1)

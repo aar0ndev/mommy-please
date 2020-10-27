@@ -32,10 +32,25 @@
     Options for <span class="appname">Mommy-Please</span>
   </h1>
 
-  <div id="updatePinSection" class="section hasPin">
+  <section class="unblockAll section hasPin">
+    <button class="expand noActiveSection hideMe">Unblock All Sites</button>
+    <button class="reset hideMe primary">Start Blocking</button>
+    <form class="prompt hideMe">
+      <p>Enter pin to unblock all sites for
+        <select class="duration" name="duration">
+          <option value="1" selected>1 hour</option>
+          <option value="24">1 day</option>
+        </select>.</p>
+      <input name="pin" class="prompt--input password" type="password">
+      <button class="primary" type="submit">Unblock All</button>
+      <div class="message"></div>
+    </form>
+  </section>
+
+  <section id="updatePinSection" class="section hasPin">
     <p class="hasPin message" data-test-update-message></p>
     <div>
-      <button id="btnUpdatePinStart" data-test-update-button1>Change Pin</button>
+      <button id="btnUpdatePinStart" class="noActiveSection" data-test-update-button1>Change Pin</button>
     </div>
     <div id="paneUpdatePin">
 
@@ -53,11 +68,12 @@
             data-test-update-input3 />
         </div>
         <div>
-          <button id="btnUpdatePin" type="submit" data-test-update-button2>Update Pin</button>
+          <button id="btnUpdatePin" type="submit" class="primary" data-test-update-button2>Update Pin</button>
         </div>
       </form>
     </div>
-  </div>
+  </section>
+
   <script src="options.js" type="module"></script>
 </body>
 

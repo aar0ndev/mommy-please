@@ -9,6 +9,7 @@ import * as whitelist from './whitelist.js'
 
 const log = new Log('background', LOG_LEVEL)
 const extensionBaseUrl = chrome.runtime.getURL('/')
+let _unblockAll = false
 
 /**
  * Try to unblock `url` with pin passed as`testPin`.
@@ -40,6 +41,22 @@ function tryUnblockPin (url, testPin, timestamp) {
   return {}
 }
 
+function unblockAll (hours) {
+  _unblockAll = hours > 0
+  redirectTabs()
+
+  if (hours < 0) return
+
+  const timestamp = getTimestampFromHours(hours)
+  // todo: make persistent, cancel when needed
+  setTimeout(() => {
+    _unblockAll = false
+    redirectTabs()
+  }, timestamp - Date.now())
+
+  return {}
+}
+
 /**
  * Request unblock from authorized devices.
  */
@@ -60,6 +77,15 @@ function tryUnblockAuth (url) {
 }
 
 /**
+ * Check block status by URL and global unblock state.
+ * @param {string} url
+ */
+function isBlocked (url) {
+  const { blocked } = whitelist.check(url)
+  return blocked && !_unblockAll
+}
+
+/**
  * Redirect any tabs as needed according to whitelist.
  */
 function redirectTabs () {
@@ -68,8 +94,7 @@ function redirectTabs () {
       const isExtensionTab = url.startsWith(extensionBaseUrl)
       if (isExtensionTab) {
         const targetUrl = url.slice(url.indexOf('?') + 1)
-        const { blocked } = whitelist.check(targetUrl)
-        if (!blocked) {
+        if (!isBlocked(targetUrl)) {
           redirectUnblockTab(id, targetUrl)
         }
       } else {
@@ -77,8 +102,7 @@ function redirectTabs () {
           // ignore non http(s) urls
           return
         }
-        const { blocked } = whitelist.check(url)
-        if (blocked) {
+        if (isBlocked(url)) {
           redirectBlockTab(id, url)
         }
       }
@@ -142,12 +166,17 @@ function onMessage (msg, sender, sendResponse) {
         const timestamp = getTimestampFromHours(hours)
         const { error } = tryUnblockPin(url, testPin, timestamp)
         res = { result: !error, url, error }
+      } else if (msg.type === msgType.MSG_UNBLOCK_ALL) {
+        const { hours } = msg
+        unblockAll(hours)
+        res = { result: true }
       } else if (msg.type === msgType.MSG_UNBLOCK_AUTH) {
         // const { url } = msg
         // tryUnblockAuth(url)
         // res = { result: true }
       } else if (msg.type === msgType.MSG_CHECK_URL) {
-        const { blocked, timeLeft } = whitelist.check(msg.url)
+        const { timeLeft } = whitelist.check(msg.url)
+        const blocked = isBlocked(msg.url)
         res = { result: true, url: msg.url, blocked, timeLeft }
       } else if (msg.type === msgType.MSG_UPDATE_PIN) {
         const { newPin, oldPin } = msg
@@ -155,10 +184,9 @@ function onMessage (msg, sender, sendResponse) {
         res = { result: !error, error }
       } else if (msg.type === msgType.MSG_CHECK_PIN) {
         const { testPin } = msg
-        error = pin.check(testPin)
-        res = { result: !error, error }
+        res = { result: pin.check(testPin), isSet: pin.isSet() }
       } else if (msg.type === msgType.MSG_CHECK_STATUS) {
-        res = { result: true, pinSet: pin.isSet() }
+        res = { result: true, pinSet: pin.isSet(), unblockAll: _unblockAll }
       } else if (msg.type === msgType.MSG_REDIRECT_ALL) {
         redirectTabs()
         res = { result: true }
@@ -172,57 +200,6 @@ function onMessage (msg, sender, sendResponse) {
   sendResponse(res)
   log.prune()
 }
-
-// /**
-//  * Extension request handler.
-//  * @param {*} details
-//  */
-// function onHeadersReceived (details) {
-//   const method = 'onHeadersReceived'
-//   const { url, type, tabId, statusCode } = details
-//   // ignore requests for extension assets or special protocols
-//   if (!url.startsWith('http')) {
-//     return
-//   }
-
-//   // ignore anything that is not a web page
-//   if (type !== 'main_frame') {
-//     // log.debug({
-//     //   method,
-//     //   comment: 'not a main_frame, ignoring',
-//     //   details
-//     // })
-//     return
-//   }
-
-//   if (statusCode === 301 || statusCode === 302 || statusCode === 307) {
-//     log.debug({
-//       method,
-//       comment: 'redirect detected, ignoring',
-//       details
-//     })
-//     return
-//   }
-
-//   // filter requests based on whitelist
-//   if (whitelist.check(url).blocked) {
-//     log.info({
-//       method,
-//       url,
-//       comment: 'not in whitelist, blocking!'
-//     })
-
-//     redirectBlockTab(tabId, url)
-//     log.prune()
-//     return
-//   }
-
-//   log.debug({
-//     method,
-//     comment: 'ok',
-//     details
-//   })
-// }
 
 function onTabUpdated (tabId, changeInfo, tab) {
   const { url } = tab
@@ -238,8 +215,8 @@ function onTabUpdated (tabId, changeInfo, tab) {
 
   log.debug({ method: 'onTabUpdated', changeInfo, tab })
 
-  // filter requests based on whitelist
-  if (whitelist.check(url).blocked) {
+  // block tab if needed
+  if (isBlocked(url)) {
     log.info({
       method: 'onTabUpdated',
       url,
@@ -254,14 +231,6 @@ function onTabUpdated (tabId, changeInfo, tab) {
  * Attach listeners for requests and messages.
  */
 function addListeners () {
-  // var filter = { urls: ['<all_urls>'] }
-  // var optExtraInfoSpec = []
-  // chrome.webRequest.onHeadersReceived.addListener(
-  //   onHeadersReceived,
-  //   filter,
-  //   optExtraInfoSpec
-  // )
-
   chrome.tabs.onUpdated.addListener(onTabUpdated)
   chrome.runtime.onMessage.addListener(onMessage)
   chrome.runtime.onInstalled.addListener(onInstalled)

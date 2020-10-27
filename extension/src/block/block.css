@@ -53,3 +53,7 @@ body[data-state="confirm"] .confirm {
   filter: grayscale(0.3);
   opacity: 0.9;
 }
+
+.options {
+  font-size: 0.8em;
+}

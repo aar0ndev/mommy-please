@@ -17,22 +17,22 @@
     <h2 class="hide request confirm">This page has been blocked.</h2>
     <div class="hide request">
       <p>Click the button below to request an unblock.</p>
-      <button class="ask-mommy">Ask Mommy</button>
+      <button class="ask-mommy primary">Ask Mommy</button>
     </div>
     <form>
       <div class="hide confirm">
 
-        <p>Enter pin to unblock for
+        <p>Enter pin to unblock this site for
           <select class="duration">
             <option value="1">1 hour</option>
             <option value="24" selected>1 day</option>
             <option value="-1">Forever</option>
-          </select>
-          or unblock from an authorized device.</p>
+          </select>.</p>
         <input id="pinInput" class="password" type="password" />
         </label>
-        <button class="unblock" type="submit">Unblock</button>
-
+        <button class="unblock primary" type="submit">Unblock</button>
+        <div class="options">or unblock all sites in <a href="/options/options.html#unblockAll"
+            target="ext-options">options</a>.</div>
       </div>
     </form>
     <p class="error"></p>
