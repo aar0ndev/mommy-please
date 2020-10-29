@@ -28,14 +28,19 @@
     </form>
   </div>
 
-  <h1 class="title hasPin">
-    Options for <span class="appname">Mommy-Please</span>
-  </h1>
+  <header>
+    <h1 class="title hasPin">
+      Options for <span class="appname">Mommy-Please</span>
+    </h1>
+    <div class="noActiveSection">
+      <button class="unblockAll expand hideMe">Unblock All Sites</button>
+      <button class="unblockAll reset hideMe primary">Start Blocking</button>
+      <button class="updatePin expand" data-test-update-button1>Change Pin</button>
+    </div>
+  </header>
 
-  <section class="unblockAll section hasPin">
-    <button class="expand noActiveSection hideMe">Unblock All Sites</button>
-    <button class="reset hideMe primary">Start Blocking</button>
-    <form class="prompt hideMe">
+  <section class="unblockAll section hideMe">
+    <form class="prompt">
       <p>Enter pin to unblock all sites for
         <select class="duration" name="duration">
           <option value="1" selected>1 hour</option>
@@ -47,24 +52,24 @@
     </form>
   </section>
 
-  <section id="updatePinSection" class="section hasPin">
-    <p class="hasPin message" data-test-update-message></p>
+  <section class="updatePin section hideMe">
+    <p class="message" data-test-update-message></p>
     <div>
-      <button id="btnUpdatePinStart" class="noActiveSection" data-test-update-button1>Change Pin</button>
+
     </div>
     <div id="paneUpdatePin">
 
       <form>
         <div>
           <label for="updatePinOld">Enter current pin:</label><br /><input type="password" id="updatePinOld"
-            data-test-update-input1 />
+            class="oldPin" data-test-update-input1 />
         </div>
         <div>
-          <label for="newPin1">Enter new pin:</label><br /><input type="password" id="newPin1"
+          <label for="newPin1">Enter new pin:</label><br /><input type="password" id="newPin1" class="newPin1"
             data-test-update-input2 />
         </div>
         <div>
-          <label for="newPin2">Confirm new pin:</label><br /><input type="password" id="newPin2"
+          <label for="newPin2">Confirm new pin:</label><br /><input type="password" id="newPin2" class="newPin2"
             data-test-update-input3 />
         </div>
         <div>

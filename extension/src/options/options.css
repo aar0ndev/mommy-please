@@ -22,18 +22,6 @@ body[data-pin-set="false"] .noPin {
   display: block;
 }
 
-#paneUpdatePin {
-  display: none;
-}
-
-#updatePinSection.active #paneUpdatePin {
-  display: block;
-}
-
-#updatePinSection.active #btnUpdatePinStart {
-  display: none;
-}
-
 .message.error {
   color: #a00;
 }

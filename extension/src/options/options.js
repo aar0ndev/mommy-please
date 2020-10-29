@@ -11,19 +11,37 @@ const $$ = (s) => document.querySelectorAll(s)
 const elMessages = $$('.message')
 const body = $('body')
 
-// const elSectionSetPin = document.querySelector('#setPinSection')
-const elInputSetPin1 = document.querySelector('#setPin1')
-const elInputSetPin2 = document.querySelector('#setPin2')
-const elButtonSetPin = document.querySelector('#btnSetPin')
+$('#btnSetPin').addEventListener('click', function setPinClick (e) {
+  e.preventDefault()
+  tryUpdatePin({
+    oldInput: null,
+    newInputs: [$('#setPin1'), $('#setPin2')]
+  })
+    .then((res) => res && window.close())
+    .catch(log.error)
+})
 
-const elSectionUpdatePin = document.querySelector('#updatePinSection')
-const elButtonUpdatePin1 = document.querySelector('#btnUpdatePinStart')
-const elInputOldPin = document.querySelector('#updatePinOld')
-const elInputNewPin1 = document.querySelector('#newPin1')
-const elInputNewPin2 = document.querySelector('#newPin2')
-const elButtonUpdatePin2 = document.querySelector('#btnUpdatePin')
+$('.updatePin.expand').addEventListener('click', function updatePinClick () {
+  setSectionActive(true)
+  $('.updatePin.section').classList.remove('hideMe')
+  document.querySelector('.updatePin .message').innerText =
+    'Please set the pin to something only you will know.'
+  $('.updatePin .oldPin').focus()
+})
 
-$('.unblockAll .reset').addEventListener('click', () => {
+$('#btnUpdatePin').addEventListener('click', function updatePinClick2 (e) {
+  e.preventDefault()
+  tryUpdatePin({
+    oldInput: $('#updatePinOld'),
+    newInputs: [$('#newPin1'), $('#newPin2')]
+  })
+    .then((res) => {
+      res && setTimeout(() => window.location.reload(), 1000)
+    })
+    .catch(log.error)
+})
+
+$('.unblockAll.reset').addEventListener('click', () => {
   chrome.runtime.sendMessage(
     {
       type: msgType.MSG_UNBLOCK_ALL,
@@ -35,9 +53,9 @@ $('.unblockAll .reset').addEventListener('click', () => {
   )
 })
 
-$('.unblockAll .expand').addEventListener('click', () => {
+$('.unblockAll.expand').addEventListener('click', () => {
   setSectionActive(true)
-  $('.unblockAll .prompt').classList.remove('hideMe')
+  $('.unblockAll.section').classList.remove('hideMe')
   $('.unblockAll .prompt--input').focus()
 })
 
@@ -124,21 +142,24 @@ function validateNewPinValues (pin, pinConfirm) {
   return errors
 }
 
-async function tryUpdatePin ({ oldInput, newInputs }) {
-  const errors = validateNewPinValues(...newInputs.map((e) => e.value))
+async function tryUpdatePin ({
+  oldInput: oldPinInput,
+  newInputs: newPinInputs
+}) {
+  const errors = validateNewPinValues(...newPinInputs.map((e) => e.value))
   if (errors.length) {
     const error = errors[0]
     uiShowMessage({
       msg: error.message,
       isError: true,
-      errElements: [newInputs[error.inputIndex]]
+      errElements: [newPinInputs[error.inputIndex]]
     })
-    newInputs[error.inputIndex].focus()
+    newPinInputs[error.inputIndex].focus()
     return false
   }
 
-  var oldPin = oldInput && oldInput.value
-  var newPin = newInputs[0].value
+  var oldPin = oldPinInput && oldPinInput.value
+  var newPin = newPinInputs[0].value
 
   try {
     await updatePin(oldPin, newPin)
@@ -149,9 +170,9 @@ async function tryUpdatePin ({ oldInput, newInputs }) {
     uiShowMessage({
       msg: err.error,
       isError: true,
-      errElements: [oldInput]
+      errElements: [oldPinInput]
     })
-    oldInput.focus()
+    oldPinInput.focus()
   }
   return false
 }
@@ -194,38 +215,6 @@ async function getStatus () {
   })
 }
 
-async function onClickButtonSetPin (e) {
-  e.preventDefault()
-  const res = await tryUpdatePin({
-    oldInput: null,
-    newInputs: [elInputSetPin1, elInputSetPin2]
-  }).catch(log.error)
-  if (res) {
-    window.close()
-  }
-}
-
-function onClickButtonUpdate1 () {
-  setSectionActive(true)
-  elSectionUpdatePin.classList.add('active')
-  document.querySelector('.message.hasPin').innerText =
-    'Please set the pin to something only you will know.'
-  elInputOldPin.focus()
-}
-
-async function onClickButtonUpdate2 (e) {
-  e.preventDefault()
-  const res = await tryUpdatePin({
-    oldInput: elInputOldPin,
-    newInputs: [elInputNewPin1, elInputNewPin2]
-  }).catch(log.error)
-  if (res) {
-    document.querySelectorAll('input').forEach((el) => (el.value = ''))
-    elSectionUpdatePin.classList.remove('active')
-    setSectionActive(false)
-  }
-}
-
 ;(async function init () {
   const status = await getStatus().catch((err) => {
     log.error(err)
@@ -238,15 +227,14 @@ async function onClickButtonUpdate2 (e) {
   if (!status) return
 
   document.body.dataset.pinSet = !!status.pinSet
-  if (!status.pinSet) elInputSetPin1.focus()
-
-  if (status.unblockAll) {
-    $('.unblockAll .reset').classList.remove('hideMe')
-  } else {
-    $('.unblockAll .expand').classList.remove('hideMe')
+  if (!status.pinSet) {
+    $('#setPin1').focus()
+    setSectionActive(true)
   }
 
-  elButtonUpdatePin2.addEventListener('click', onClickButtonUpdate2)
-  elButtonUpdatePin1.addEventListener('click', onClickButtonUpdate1)
-  elButtonSetPin.addEventListener('click', onClickButtonSetPin)
+  if (status.unblockAll) {
+    $('.unblockAll.reset').classList.remove('hideMe')
+  } else {
+    $('.unblockAll.expand').classList.remove('hideMe')
+  }
 })()
