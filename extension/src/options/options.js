@@ -1,6 +1,5 @@
-/* global chrome */
 import { Log, LogLevel } from '../common/log.js'
-import * as msgType from '../common/msg.js'
+import * as msg from '../common/msg.js'
 
 const log = new Log('options', LogLevel.DEBUG)
 const pinRegex = /^[0-9]{4}$/
@@ -41,16 +40,9 @@ $('#btnUpdatePin').addEventListener('click', function updatePinClick2 (e) {
     .catch(log.error)
 })
 
-$('.unblockAll.reset').addEventListener('click', () => {
-  chrome.runtime.sendMessage(
-    {
-      type: msgType.MSG_UNBLOCK_ALL,
-      hours: -1
-    },
-    function unblockAllCallback (response) {
-      window.location.reload()
-    }
-  )
+$('.unblockAll.reset').addEventListener('click', async () => {
+  await msg.unblockAll({ hours: -1 }).catch((err) => log.error(err))
+  window.location.reload()
 })
 
 $('.unblockAll.expand').addEventListener('click', () => {
@@ -59,37 +51,34 @@ $('.unblockAll.expand').addEventListener('click', () => {
   $('.unblockAll .prompt--input').focus()
 })
 
-$('.unblockAll form').addEventListener('submit', (e) => {
+$('.unblockAll form').addEventListener('submit', async (e) => {
   e.preventDefault()
-  const testPin = e.target.elements.pin.value
-  const hours = e.target.elements.duration.value
-  chrome.runtime.sendMessage(
-    { type: msgType.MSG_CHECK_PIN, testPin },
-    function checkPinCallback (response) {
-      log.debug({ method: 'checkPinCallback', response })
-      if (response && response.result === true) {
-        chrome.runtime.sendMessage(
-          { type: msgType.MSG_UNBLOCK_ALL, hours },
-          function unblockAllCallback (response) {
-            log.debug({ method: 'checkPinCallback', response })
-            if (window.location.hash === '#unblockAll') {
-              // from block screen
-              window.close()
-            } else {
-              window.location.reload()
-            }
-          }
-        )
-      } else if (response && response.error) {
-        const msg = $('.unblockAll .message')
-        msg.innerText = response.error
-        msg.classList.add('error')
-        const input = $('.unblockAll .prompt--input')
-        input.classList.add('error')
-        input.focus()
-      }
+  const { pin, duration } = e.target.elements
+  try {
+    await msg.checkPin({ testPin: pin.value })
+  } catch (err) {
+    const msgEl = $('.unblockAll .message')
+    if (err.response && !err.response.error) {
+      msgEl.innerText = err.response.isSet ? 'Incorrect pin' : 'No pin set'
+    } else if (err.response && err.response.error) {
+      msgEl.innerText = err.response.error
+    } else {
+      msgEl.innerText = 'Internal error, please try again later'
     }
-  )
+    msgEl.classList.add('error')
+    const inputEl = $('.unblockAll .prompt--input')
+    inputEl.classList.add('error')
+    inputEl.focus()
+    inputEl.select()
+    return
+  }
+
+  await msg.unblockAll({ hours: duration.value }).catch((err) => log.error(err))
+  if (window.location.hash === '#unblockAll') {
+    window.close() // from block screen, so return there
+  } else {
+    window.location.reload()
+  }
 })
 
 function setSectionActive (active) {
@@ -162,13 +151,13 @@ async function tryUpdatePin ({
   var newPin = newPinInputs[0].value
 
   try {
-    await updatePin(oldPin, newPin)
+    await msg.updatePin({ oldPin, newPin })
     uiShowMessage({ msg: 'Pin updated successfully!' })
     setTimeout(() => window.location.reload(), 1000)
     return true
   } catch (err) {
     uiShowMessage({
-      msg: err.error,
+      msg: err.message,
       isError: true,
       errElements: [oldPinInput]
     })
@@ -177,49 +166,13 @@ async function tryUpdatePin ({
   return false
 }
 
-function updatePin (oldPin, newPin) {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(
-      { type: msgType.MSG_UPDATE_PIN, oldPin, newPin },
-      (response) => {
-        if (response.result) {
-          resolve(response)
-        } else {
-          reject(response)
-        }
-      }
-    )
-  })
-}
-
-/**
- * @typedef {Object} Status
- * @property {boolean} pinSet
- */
-
-/**
- * Retrieve status from background.
- * @returns {Status}
- */
-async function getStatus () {
-  return await new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: msgType.MSG_CHECK_STATUS }, function (
-      response
-    ) {
-      if (response && response.result) {
-        resolve(response)
-      } else {
-        reject(response)
-      }
-    })
-  })
-}
-
 ;(async function init () {
-  const status = await getStatus().catch((err) => {
+  const status = await msg.checkStatus().catch((err) => {
     log.error(err)
     uiShowMessage({
-      msg: (status && status.error) || 'Internal error',
+      msg:
+        (err.response && err.response.error) ||
+        'Internal error, please restart browser',
       isError: true
     })
   })
