@@ -10,7 +10,7 @@ describe('Timer', () => {
     expect(new Timer()).not.toBe(null)
   })
 
-  it('returns value from set', async () => {
+  it('returns value', async () => {
     const t = new Timer()
 
     const result = await new Promise((resolve) => {
@@ -23,11 +23,13 @@ describe('Timer', () => {
 
   it('returns value from json', async () => {
     const t = new Timer()
-    t.set('stuff', 0, 'good')
-    const serial = t.toJson()
+    const t2 = new Timer()
 
     const result = await new Promise((resolve) => {
-      const t2 = new Timer()
+      const id = t.set('stuff', 0, 'good')
+      const serial = t.toJson()
+      t.cancel(id)
+
       t2.on('stuff', resolve)
       t2.fromJson(serial)
     })
@@ -37,12 +39,13 @@ describe('Timer', () => {
 
   it('ignores expired from json', async () => {
     const t = new Timer()
-    t.set('stuff', 0, 'bad')
-    t.set('stuff2', 10, 'good')
-    const serial = t.toJson()
+    const t2 = new Timer()
 
     const result = await new Promise((resolve) => {
-      const t2 = new Timer()
+      const ids = [t.set('stuff', 0, 'bad'), t.set('stuff2', 10, 'good')]
+      const serial = t.toJson()
+      ids.map((id) => t.cancel(id))
+
       t2.on('stuff', resolve)
       t2.on('stuff2', resolve)
       t2.fromJson(serial, true)
@@ -50,4 +53,18 @@ describe('Timer', () => {
 
     expect(result).toBe('good')
   })
-}, 100)
+
+  it('cancels', async () => {
+    const t = new Timer()
+
+    const result = await new Promise((resolve) => {
+      t.on('stuff', resolve)
+      t.on('stuff2', resolve)
+      const id = t.set('stuff', 0, 'bad')
+      t.set('stuff2', 10, 'good')
+      t.cancel(id)
+    })
+
+    expect(result).toBe('good')
+  })
+})

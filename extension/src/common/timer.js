@@ -5,39 +5,40 @@ export class Timer {
     this._ids = {}
   }
 
-  on (eventName, callback) {
-    if (!eventName || typeof eventName !== 'string') {
-      throw new Error('Invalid eventName')
+  on (name, callback) {
+    if (!name || typeof name !== 'string') {
+      throw new Error('Invalid name')
     }
-    this._callbacks[eventName] = this._callbacks[eventName] || []
-    this._callbacks[eventName].push(callback)
+    this._callbacks[name] = this._callbacks[name] || []
+    this._callbacks[name].push(callback)
   }
 
-  off (eventName, callback) {
-    if (!eventName || typeof eventName !== 'string') {
-      throw new Error('Invalid eventName')
+  off (name, callback) {
+    if (!name || typeof name !== 'string') {
+      throw new Error('Invalid name')
     }
-    this._callbacks[eventName] = (this._callbacks[eventName] || []).filter(
+    this._callbacks[name] = (this._callbacks[name] || []).filter(
       (c) => c !== callback
     )
   }
 
-  set (eventName, delay, data) {
-    if (!eventName || typeof eventName !== 'string') {
-      throw new Error('Invalid eventName')
+  set (name, delay, data) {
+    if (!name || typeof name !== 'string') {
+      throw new Error('Invalid name')
     }
     const now = Date.now()
-    this._pendingEvents[eventName] = this._pendingEvents[eventName] || []
 
-    const id = setTimeout(() => this._check(), delay)
-    const evt = {
-      id,
-      eventName,
+    this._pendingEvents[name] = this._pendingEvents[name] || []
+
+    const event = {
+      name,
       timestamp: now + delay,
       data
     }
-    this._ids[id] = eventName
-    this._pendingEvents[eventName].push(evt)
+    const id = setTimeout(() => this._dispatch(event), delay)
+    event.id = id
+    this._ids[id] = name
+    this._pendingEvents[name].push(event)
     return id
   }
 
@@ -49,11 +50,12 @@ export class Timer {
 
     clearTimeout(id)
 
-    const eventName = this._ids[id]
+    const name = this._ids[id]
+    delete this._ids[id]
 
-    this._pendingEvents[eventName] = (
-      this._pendingEvents[eventName] || []
-    ).filter((e) => e.id !== id)
+    this._pendingEvents[name] = (this._pendingEvents[name] || []).filter(
+      (e) => e.id !== id
+    )
   }
 
   toJson () {
@@ -65,41 +67,33 @@ export class Timer {
 
     const now = Date.now()
     const events = []
-    for (const evtName in this._pendingEvents) {
-      const eventsToProcess = [...(this._pendingEvents[evtName] || [])]
-      this._pendingEvents[evtName] = []
-      for (const evt of eventsToProcess) {
-        const timeout = Math.max(0, evt.timestamp - now)
+    for (const name in this._pendingEvents) {
+      const eventsToProcess = [...(this._pendingEvents[name] || [])]
+      this._pendingEvents[name] = []
+      for (const event of eventsToProcess) {
+        const timeout = Math.max(0, event.timestamp - now)
         if (timeout === 0 && ignoreExpired) {
           // do nothing
         } else {
-          evt.id = setTimeout(() => this._check(), timeout)
-          this._pendingEvents[evtName].push(evt)
-          events.push(evt)
+          event.id = setTimeout(() => this._dispatch(event), timeout)
+          this._ids[event.name] = event.id
+          this._pendingEvents[name].push(event)
+          events.push(event)
         }
       }
     }
     return events
   }
 
-  _check () {
-    const now = Date.now()
-    for (const evtName in this._pendingEvents) {
-      for (const evt of this._pendingEvents[evtName]) {
-        if (now >= evt.timestamp) {
-          this._pendingEvents[evtName] = (
-            this._pendingEvents[evtName] || []
-          ).filter((e) => e !== evt)
-          this._dispatch(evtName, evt)
-        }
-      }
+  _dispatch (event) {
+    const name = event.name
+    if (this._callbacks[name] === undefined) {
+      console.warn('no callbacks registered for ' + name)
     }
-  }
-
-  _dispatch (evtName, evt) {
-    for (const callback of this._callbacks[evtName] || []) {
+    const callbacks = this._callbacks[name] || []
+    for (const callback of callbacks) {
       setTimeout(() => {
-        callback(evt.data)
+        callback(event.data)
       }, 0)
     }
   }
