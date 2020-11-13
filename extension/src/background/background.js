@@ -231,12 +231,13 @@ function addListeners () {
 }
 
 /**
- * Initialize extension by retrieving information from storage.
+ * Initialize extension.
  */
 ;(async function init () {
   log.debug({ method: 'init' })
   addListeners()
   await whitelist.init(chrome.storage.local).catch((err) => log.warn(err))
+  whitelist.setExpiredListener(() => redirectTabs())
 
   await _unblockAll.init(chrome.storage.local).catch((err) => log.warn(err))
   _unblockAll.onExpired = () => redirectTabs()
