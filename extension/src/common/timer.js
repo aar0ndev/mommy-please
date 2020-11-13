@@ -58,6 +58,12 @@ export class Timer {
     )
   }
 
+  cancelAll () {
+    for (const id of this._ids) {
+      this.cancel(id)
+    }
+  }
+
   toJson () {
     return JSON.stringify(this._pendingEvents)
   }
