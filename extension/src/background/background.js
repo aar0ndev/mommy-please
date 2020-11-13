@@ -44,6 +44,7 @@ function tryUnblockPin (url, testPin, timestamp) {
 function unblockAll (hours) {
   _unblockAll && _unblockAll.set(hours)
   redirectTabs()
+  msgType.notify({ update: 'unblockAll' })
 }
 
 /**

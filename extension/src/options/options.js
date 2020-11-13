@@ -1,3 +1,4 @@
+/* global chrome */
 import { Log, LogLevel } from '../common/log.js'
 import * as msg from '../common/msg.js'
 
@@ -76,8 +77,6 @@ $('.unblockAll form').addEventListener('submit', async (e) => {
   await msg.unblockAll({ hours: duration.value }).catch((err) => log.error(err))
   if (window.location.hash === '#unblockAll') {
     window.close() // from block screen, so return there
-  } else {
-    window.location.reload()
   }
 })
 
@@ -190,4 +189,10 @@ async function tryUpdatePin ({
   } else {
     $('.unblockAll.expand').classList.remove('hideMe')
   }
+
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === msg.MSG_NOTIFY && message.update === 'unblockAll') {
+      setTimeout(() => window.location.reload(), 0)
+    }
+  })
 })()

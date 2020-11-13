@@ -1,3 +1,5 @@
+/* global chrome */
+
 /* message types */
 export const MSG_BLOCK = 'block'
 export const MSG_UNBLOCK_PIN = 'try-unblock-pin'
@@ -8,11 +10,14 @@ export const MSG_CHECK_PIN = 'check-pin'
 export const MSG_CHECK_STATUS = 'check-status'
 export const MSG_REDIRECT_ALL = 'redirect-all'
 export const MSG_UNBLOCK_ALL = 'unblock-all'
+export const MSG_NOTIFY = 'notify'
 
 export const checkStatus = (data) => msgWrap(MSG_CHECK_STATUS, data)
 export const checkPin = (data) => msgWrap(MSG_CHECK_PIN, data)
 export const unblockAll = (data) => msgWrap(MSG_UNBLOCK_ALL, data)
 export const updatePin = (data) => msgWrap(MSG_UPDATE_PIN, data)
+export const notify = (data) =>
+  chrome.runtime.sendMessage({ ...data, type: MSG_NOTIFY })
 
 /* custom error */
 export const ERROR_NAME = 'MessageError'
@@ -25,7 +30,6 @@ class MessageError extends Error {
   }
 }
 
-/* global chrome */
 /* promisfied messages */
 const msgWrap = (msgType, data) =>
   new Promise((resolve, reject) => {
