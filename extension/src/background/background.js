@@ -170,6 +170,12 @@ function onMessage (msg, sender, sendResponse) {
   log.prune()
 }
 
+/**
+ * Handles tab updates by looking at url to determine block status.
+ * @param {Number} tabId
+ * @param {*} changeInfo
+ * @param {*} tab
+ */
 function onTabUpdated (tabId, changeInfo, tab) {
   const { url } = tab
 
@@ -178,6 +184,7 @@ function onTabUpdated (tabId, changeInfo, tab) {
     return
   }
 
+  // only check tab after it gets to loading status as otherwise redirects may break
   if (changeInfo.status !== 'loading') {
     return
   }
