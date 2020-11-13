@@ -14,6 +14,10 @@ h2 {
   display: none;
 }
 
+.remove-unblock-all-section {
+  display: none;
+}
+
 .logo {
   height: 1.5em;
   padding-left: 0.5em;

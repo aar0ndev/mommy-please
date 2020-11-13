@@ -4,16 +4,21 @@ import * as msgType from '../common/msg.js'
 
 const log = new Log('popup', LogLevel.INFO)
 
-var elRemoveUnblock = document.querySelector('.remove-unblock-section')
-var elSpanTimeLeft = document.querySelector('span.timeLeft')
-var elSpanTimeLeftUnits = document.querySelector('span.timeLeftUnits')
-var elButtonBlock = document.querySelector('button.block')
+const $ = (s) => document.querySelector(s)
+
+var elRemoveUnblock = $('.remove-unblock-section')
+var elRemoveUnblockAll = $('.remove-unblock-all-section')
+var elSpanTimeLeft = $('span.timeLeft')
+var elSpanTimeLeftUnits = $('span.timeLeftUnits')
+var elButtonBlock = $('button.block')
+var elButtonBlockAll = $('button.blockAll')
 
 /**
  * Updates UI.
  * @param {number} timeLeft - how long (in milliseconds) page remains unblocked
+ * @param {boolean} unblockAll - global unblock status
  */
-function uiUpdate (timeLeft) {
+function uiShowRemoveUnblockSite (timeLeft) {
   elRemoveUnblock.style.display = timeLeft == null ? 'none' : 'block'
   if (timeLeft == null) return
   if (timeLeft < 0) {
@@ -38,6 +43,10 @@ function uiUpdate (timeLeft) {
   }
 }
 
+function uiShowRemoveUnblockAll () {
+  elRemoveUnblockAll.style.display = 'block'
+}
+
 /**
  * Shows the amount of time page remains unblocked.
  * @param {number} value
@@ -57,7 +66,7 @@ function uiShowTimeLeft (value, unit) {
  * Click handler for block button.
  * @param {Event} e
  */
-function onClickBlock (e) {
+function onClickRemoveUnblockSite (e) {
   e.preventDefault()
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     const { url } = tabs[0]
@@ -71,6 +80,20 @@ function onClickBlock (e) {
       }
     })
   })
+}
+
+/**
+ * Click handler for block all button.
+ * @param {Event} e
+ */
+async function onClickRemoveUnblockAll (e) {
+  e.preventDefault()
+  const response = await msgType
+    .unblockAll({ hours: -1 })
+    .catch((err) => log.error(err))
+  if (response && response.result) {
+    window.close()
+  }
 }
 
 /**
@@ -91,8 +114,7 @@ function getInfo () {
         { type: msgType.MSG_CHECK_URL, url },
         function (response) {
           if (response && response.result) {
-            const { blocked, timeLeft } = response
-            return resolve({ blocked, timeLeft })
+            return resolve(response)
           }
           reject(response)
         }
@@ -105,11 +127,14 @@ function getInfo () {
  * Initialize page.
  */
 ;(async function init () {
-  elButtonBlock.addEventListener('click', onClickBlock)
+  elButtonBlock.addEventListener('click', onClickRemoveUnblockSite)
+  elButtonBlockAll.addEventListener('click', onClickRemoveUnblockAll)
 
   const info = await getInfo().catch(log.error)
-  if (info && !info.blocked) {
-    uiUpdate(info.timeLeft)
+  if (info && info.unblockAll) {
+    uiShowRemoveUnblockAll()
+  } else if (info && !info.blocked) {
+    uiShowRemoveUnblockSite(info.timeLeft, info.unblockAll)
   }
 
   log.prune()
