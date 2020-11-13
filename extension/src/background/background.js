@@ -142,7 +142,8 @@ function onMessage (msg, sender, sendResponse) {
       } else if (msg.type === msgType.MSG_CHECK_URL) {
         const { timeLeft } = whitelist.check(msg.url)
         const blocked = isBlocked(msg.url)
-        res = { result: true, url: msg.url, blocked, timeLeft }
+        const unblockAll = _unblockAll && _unblockAll.active
+        res = { result: true, url: msg.url, blocked, timeLeft, unblockAll }
       } else if (msg.type === msgType.MSG_UPDATE_PIN) {
         const { newPin, oldPin } = msg
         const { error } = pin.update({ oldPin, newPin })
