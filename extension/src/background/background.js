@@ -2,7 +2,6 @@
 import { Log } from '../common/log.js'
 import { LOG_LEVEL } from '../common/const.js'
 import { getTimestampFromHours } from '../common/util.js'
-import * as auth from './auth.js'
 import * as msgType from '../common/msg.js'
 import * as pin from './pin.js'
 import * as whitelist from './whitelist.js'
@@ -45,25 +44,6 @@ function tryUnblockPin (url, testPin, timestamp) {
 function unblockAll (hours) {
   _unblockAll && _unblockAll.set(hours)
   redirectTabs()
-}
-
-/**
- * Request unblock from authorized devices.
- */
-function tryUnblockAuth (url) {
-  auth.unblock(url).then(({ status, hours, url }) => {
-    log.debug({ comment: 'auth.unblock returned', status, url, hours })
-    if (status === 'ok') {
-      const timestamp = getTimestampFromHours(hours)
-      if (!whitelist.addUrl(url, timestamp)) {
-        log.warn({
-          comment: 'url already in whitelist',
-          method: 'tryUnblockAuth'
-        })
-      }
-      redirectTabs()
-    }
-  })
 }
 
 /**
@@ -141,7 +121,6 @@ function onInstalled (info) {
  * @param {*} sendResponse
  */
 function onMessage (msg, sender, sendResponse) {
-  let error
   let res = { result: false }
   try {
     if (msg && msg.type) {
@@ -160,10 +139,6 @@ function onMessage (msg, sender, sendResponse) {
         const { hours } = msg
         unblockAll(hours)
         res = { result: true }
-      } else if (msg.type === msgType.MSG_UNBLOCK_AUTH) {
-        // const { url } = msg
-        // tryUnblockAuth(url)
-        // res = { result: true }
       } else if (msg.type === msgType.MSG_CHECK_URL) {
         const { timeLeft } = whitelist.check(msg.url)
         const blocked = isBlocked(msg.url)
