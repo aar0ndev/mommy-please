@@ -6,10 +6,11 @@ import * as auth from './auth.js'
 import * as msgType from '../common/msg.js'
 import * as pin from './pin.js'
 import * as whitelist from './whitelist.js'
+import UnblockAll from './unblockAll.js'
 
 const log = new Log('background', LOG_LEVEL)
 const extensionBaseUrl = chrome.runtime.getURL('/')
-let _unblockAll = false
+const _unblockAll = UnblockAll()
 
 /**
  * Try to unblock `url` with pin passed as`testPin`.
@@ -42,19 +43,8 @@ function tryUnblockPin (url, testPin, timestamp) {
 }
 
 function unblockAll (hours) {
-  _unblockAll = hours > 0
+  _unblockAll && _unblockAll.set(hours)
   redirectTabs()
-
-  if (hours < 0) return
-
-  const timestamp = getTimestampFromHours(hours)
-  // todo: make persistent, cancel when needed
-  setTimeout(() => {
-    _unblockAll = false
-    redirectTabs()
-  }, timestamp - Date.now())
-
-  return {}
 }
 
 /**
@@ -82,7 +72,7 @@ function tryUnblockAuth (url) {
  */
 function isBlocked (url) {
   const { blocked } = whitelist.check(url)
-  return blocked && !_unblockAll
+  return blocked && !_unblockAll.active
 }
 
 /**
@@ -186,7 +176,11 @@ function onMessage (msg, sender, sendResponse) {
         const { testPin } = msg
         res = { result: pin.check(testPin), isSet: pin.isSet() }
       } else if (msg.type === msgType.MSG_CHECK_STATUS) {
-        res = { result: true, pinSet: pin.isSet(), unblockAll: _unblockAll }
+        res = {
+          result: true,
+          pinSet: pin.isSet(),
+          unblockAll: _unblockAll && _unblockAll.active
+        }
       } else if (msg.type === msgType.MSG_REDIRECT_ALL) {
         redirectTabs()
         res = { result: true }
@@ -243,6 +237,10 @@ function addListeners () {
   log.debug({ method: 'init' })
   addListeners()
   await whitelist.init(chrome.storage.local).catch((err) => log.warn(err))
+
+  await _unblockAll.init(chrome.storage.local).catch((err) => log.warn(err))
+  _unblockAll.onExpired = () => redirectTabs()
+
   await pin.init(chrome.storage.sync).catch((err) => log.warn(err))
   log.prune()
 })()
