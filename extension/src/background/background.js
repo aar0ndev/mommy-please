@@ -228,4 +228,6 @@ function addListeners () {
 
   await pin.init(chrome.storage.sync).catch((err) => log.warn(err))
   log.prune()
+
+  redirectTabs()
 })()
