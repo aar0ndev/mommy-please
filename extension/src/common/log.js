@@ -29,7 +29,13 @@ function Log (name, level) {
 
   function error (data) {
     // try to guess if an error was passed
-    if (data.stack && data.message) {
+    if (data == null) {
+      try {
+        throw new Error('Undefined error')
+      } catch (ex) {
+        _log(LogLevel.ERROR, { error: ex }, console.error)
+      }
+    } else if (data.stack && data.message) {
       _log(LogLevel.ERROR, { error: data }, console.error)
     } else {
       _log(LogLevel.ERROR, data, console.error)
